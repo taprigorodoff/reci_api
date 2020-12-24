@@ -1,10 +1,10 @@
 from flask_restful import Resource
 from flask import jsonify
-from resources.models import Recipes
+from resources.models import Recipe
 
 
 class RecipeList(Resource):
     def get(self):
-        recipes = Recipes.query.order_by(Recipes.id.desc()).all()
-        results = [ob.as_json() for ob in recipes]
+        r = Recipe.query.order_by(Recipe.id.desc()).all()
+        results = [ob.as_json() for ob in r]
         return jsonify(results)
