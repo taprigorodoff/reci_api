@@ -25,6 +25,9 @@ class Recipes(db.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'portion': self.portion,
+            'cook_time': self.cook_time,
+            'all_time': self.all_time,
             'categories': [ob.as_json() for ob in self.categories]
         }
 
@@ -37,6 +40,4 @@ class d_categories(db.Model):
         super(d_categories, self).__init__(*args, **kwargs)
 
     def as_json(self):
-        return {
-            'name': self.name
-        }
+        return self.name
