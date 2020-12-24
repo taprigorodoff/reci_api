@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../reci_front/.idea/blog.iml" filepath="$PROJECT_DIR$/../reci_front/.idea/blog.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../old_blog/.idea/blog.iml" filepath="$PROJECT_DIR$/../old_blog/.idea/blog.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/reci_api.iml" filepath="$PROJECT_DIR$/.idea/reci_api.iml" />
     </modules>
   </component>

@@ -144,6 +144,7 @@ class Recipe(db.Model):
             'portion': self.portion,
             'cook_time': self.cook_time,
             'all_time': self.all_time,
+            'description': self.description,
             'categories': [ob.as_json() for ob in self.categories],
             'recipe_ingredients': [ob.as_json() for ob in self.recipe_recipe_ingredients_0]
         }
@@ -155,5 +156,6 @@ class Recipe(db.Model):
             'portion': self.portion,
             'cook_time': self.cook_time,
             'all_time': self.all_time,
+            'description': self.description,
             'categories': [ob.as_json() for ob in self.categories]
         }
