@@ -119,6 +119,8 @@ class RecipeIngredient(db.Model):
         }
         if self.stage:
             result.update({'stage': self.stage.name})
+        else:
+            result.update({'stage': 'other'})
         if self.prepack_type:
             result.update({'pre_pack': self.prepack_type.name})
 
@@ -138,6 +140,24 @@ class Recipe(db.Model):
                                  backref=db.backref('Recipe', lazy='dynamic'))
 
     def as_full_json(self):
+        recipe_ingredients = {}
+        pre_pack = {}
+
+        for ob in self.recipe_recipe_ingredients_0:
+            ingredient = ob.as_json()
+
+            stage_name = ingredient.pop('stage')
+            pre_pack_name = ingredient.pop('pre_pack', None)
+
+            tmp_ingredients = recipe_ingredients.get(stage_name, [])
+            tmp_ingredients.append(ingredient)
+            recipe_ingredients.update({stage_name: tmp_ingredients})
+
+            if pre_pack_name:
+                tmp_pre_pack = pre_pack.get(pre_pack_name, [])
+                tmp_pre_pack.append(ingredient)
+                pre_pack.update({pre_pack_name: tmp_pre_pack})
+
         return {
             'id': self.id,
             'name': self.name,
@@ -146,7 +166,8 @@ class Recipe(db.Model):
             'all_time': self.all_time,
             'description': self.description,
             'categories': [ob.as_json() for ob in self.categories],
-            'recipe_ingredients': [ob.as_json() for ob in self.recipe_recipe_ingredients_0]
+            'recipe_ingredients': recipe_ingredients,
+            'pre_pack': pre_pack
         }
 
     def as_json(self):
