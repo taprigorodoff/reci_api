@@ -9,8 +9,7 @@ api = Api(app)
 db = SQLAlchemy(app)
 
 
-from resources.RecipeList import RecipeList
-from resources.Recipe import RecipeDetail, RecipeImg
+from resources.Recipe import RecipeDetail, RecipeImg, RecipeList
 
 app.config.from_object(Configuration)
 
