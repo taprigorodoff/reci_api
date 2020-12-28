@@ -10,9 +10,10 @@ db = SQLAlchemy(app)
 
 
 from resources.RecipeList import RecipeList
-from resources.Recipe import RecipeDetail
+from resources.Recipe import RecipeDetail, RecipeImg
 
 app.config.from_object(Configuration)
 
 api.add_resource(RecipeList, '/recipes')
 api.add_resource(RecipeDetail, '/recipe/<id>')
+api.add_resource(RecipeImg, '/recipe/img/<id>')

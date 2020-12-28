@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 import json
+import base64
 
 db = SQLAlchemy()
 
@@ -167,7 +168,11 @@ class Recipe(db.Model):
             'description': self.description,
             'categories': [ob.as_json() for ob in self.categories],
             'recipe_ingredients': recipe_ingredients,
-            'pre_pack': pre_pack
+            'pre_pack': pre_pack,
+            'img': {
+                'url':
+                    '/recipe/img/{}'.format(self.id)
+            }
         }
 
     def as_json(self):
