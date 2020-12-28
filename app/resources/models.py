@@ -114,16 +114,24 @@ class RecipeIngredient(db.Model):
 
     def as_json(self):
         result = {
-            'ingredient': self.ingredient.name,
+            'ingredient': self.ingredient.name, #  TODO может быть не ингредиент, а рецепт. ссылка?
             'amount': self.amount,
             'unit': self.unit.name
         }
+
         if self.stage:
             result.update({'stage': self.stage.name})
         else:
             result.update({'stage': 'other'})
+
         if self.prepack_type:
             result.update({'pre_pack': self.prepack_type.name})
+
+        if self.ingredient_alternatives:
+            alternatives = []
+            for ai in self.ingredient_alternatives:
+                alternatives.append(ai.ingredient.name)
+            result.update({'alternatives': alternatives})
 
         return result
 
