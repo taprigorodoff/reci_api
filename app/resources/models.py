@@ -41,7 +41,10 @@ class DStoreSection(db.Model):
     name = db.Column(db.Text)
 
     def as_json(self):
-        return self.name
+        return {
+            'id': self.id,
+            'name': self.name
+        }
 
 
 class DUnit(db.Model):
@@ -114,7 +117,7 @@ class RecipeIngredient(db.Model):
 
     def as_json(self):
         result = {
-            'ingredient': self.ingredient.name, #  TODO может быть не ингредиент, а рецепт. ссылка?
+            'ingredient': self.ingredient.name,  # TODO может быть не ингредиент, а рецепт. ссылка?
             'amount': self.amount,
             'unit': self.unit.name
         }
