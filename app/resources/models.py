@@ -79,7 +79,11 @@ class Ingredient(db.Model):
                                     backref='ingredients')
 
     def as_json(self):
-        return self.name
+        return {
+            'id': self.id,
+            'name': self.name,
+            'store_section': self.store_section.name
+        }
 
 
 t_recipe_categories = db.Table(

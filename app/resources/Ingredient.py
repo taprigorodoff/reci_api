@@ -5,7 +5,15 @@ from app import db
 class IngredientList(Resource):
     def get(self):
         r = Ingredient.query.order_by(Ingredient.id.desc()).all()
-        results = [ob.as_json() for ob in r]
+        results = {}
+
+        for ob in r:
+            ingredient = ob.as_json()
+            store_section = ingredient.pop('store_section', 'other')
+            tmp_ingredients = results.get(store_section, [])
+            tmp_ingredients.append(ingredient)
+            results.update({store_section: tmp_ingredients})
+
         return results, 200
 
 
