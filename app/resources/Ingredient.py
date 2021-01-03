@@ -1,6 +1,8 @@
 from flask_restful import Resource, reqparse
+from sqlalchemy import exc
 from resources.models import Ingredient, DStoreSection
 from app import db
+
 
 class IngredientList(Resource):
     def get(self):
@@ -15,6 +17,25 @@ class IngredientList(Resource):
             results.update({store_section: tmp_ingredients})
 
         return results, 200
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('name')
+        parser.add_argument('store_section_id')
+        args = parser.parse_args()
+
+        ingredient = Ingredient()
+        ingredient.name = args['name']
+        ingredient.store_section_id = args['store_section_id']
+
+        try:
+            db.session.add(ingredient)
+            db.session.commit()
+            return ingredient.as_json(), 201
+        except exc.SQLAlchemyError as e:
+            return {
+                       'messages': e.args
+                   }, 400
 
 
 class IngredientDetail(Resource):
