@@ -11,7 +11,7 @@ class IngredientList(Resource):
 
         for ob in r:
             ingredient = ob.as_json()
-            store_section = ingredient.pop('store_section', 'other')
+            store_section = ingredient.pop('store_section', 'other')['name']
             tmp_ingredients = results.get(store_section, [])
             tmp_ingredients.append(ingredient)
             results.update({store_section: tmp_ingredients})
@@ -42,6 +42,24 @@ class IngredientDetail(Resource):
     def get(self, id):
         r = Ingredient.query.filter(Ingredient.id == id).first_or_404()
         return r.as_json(), 200
+
+    def put(self, id):
+        parser = reqparse.RequestParser()
+        parser.add_argument('name')
+        parser.add_argument('store_section_id')
+        args = parser.parse_args()
+
+        ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
+        ingredient.name = args['name']
+        ingredient.store_section_id = args['store_section_id']
+
+        try:
+            db.session.commit()
+            return ingredient.as_json(), 200 
+        except exc.SQLAlchemyError as e:
+            return {
+                       'messages': e.args
+                   }, 400
 
 
 class StoreSectionList(Resource):

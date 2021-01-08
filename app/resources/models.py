@@ -82,7 +82,11 @@ class Ingredient(db.Model):
         return {
             'id': self.id,
             'name': self.name,
-            'store_section': self.store_section.name
+            'store_section':
+                {
+                    'id': self.store_section.id,
+                    'name': self.store_section.name
+                }
         }
 
 
