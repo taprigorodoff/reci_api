@@ -54,7 +54,10 @@ class IngredientDetail(Resource):
         ingredient.store_section_id = args['store_section_id']
 
         try:
-            db.session.commit()
+            # todo разобрться, почему r в другой сессии(импорт?)
+            current_db_sessions = db.session.object_session(ingredient)
+            current_db_sessions.add(ingredient)
+            current_db_sessions.commit()
             return ingredient.as_json(), 200
         except exc.SQLAlchemyError as e:
             return {
