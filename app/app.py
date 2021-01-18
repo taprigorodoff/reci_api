@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
-from config import Configuration
+from config import Config
 import json
 
 app = Flask(__name__)
@@ -13,7 +13,7 @@ from resources.Recipe import RecipeDetail, RecipeImg, RecipeList
 from resources.Ingredient import IngredientList, IngredientDetail
 from resources.Ingredient import StoreSectionList, StoreSectionDetail
 
-app.config.from_object(Configuration)
+app.config.from_object(Config)
 
 api.add_resource(RecipeList, '/recipe')
 
