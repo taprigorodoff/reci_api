@@ -72,6 +72,7 @@ class StoreSectionList(Resource):
         return results, 200
 
     def post(self):
+        # todo проверить на существование
         parser = reqparse.RequestParser()
         parser.add_argument('name')
         args = parser.parse_args()
@@ -89,6 +90,7 @@ class StoreSectionDetail(Resource):
         return r.as_json(), 200
 
     def put(self, id):
+        #todo проверить на существование
         parser = reqparse.RequestParser()
         parser.add_argument('name')
         args = parser.parse_args()
