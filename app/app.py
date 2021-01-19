@@ -2,7 +2,6 @@ from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from config import Configuration
-import json
 
 app = Flask(__name__)
 api = Api(app)
