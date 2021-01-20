@@ -9,6 +9,7 @@ db = SQLAlchemy(app)
 
 
 from resources.Recipe import RecipeDetail, RecipeImg, RecipeList
+from resources.Recipe import RecipeIngredientList, RecipeIngredientDetail
 from resources.Ingredient import IngredientList, IngredientDetail
 from resources.Ingredient import StoreSectionList, StoreSectionDetail
 
@@ -18,6 +19,8 @@ api.add_resource(RecipeList, '/recipe')
 
 api.add_resource(RecipeDetail, '/recipe/<id>')
 api.add_resource(RecipeImg, '/recipe/img/<id>')
+api.add_resource(RecipeIngredientList, '/recipe/<recipe_id>/ingredient')
+api.add_resource(RecipeIngredientDetail, '/recipe/<recipe_id>/ingredient/<id>')
 
 api.add_resource(IngredientList, '/ingredient')
 api.add_resource(IngredientDetail, '/ingredient/<id>')

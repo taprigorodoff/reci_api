@@ -63,6 +63,24 @@ class RecipeDetail(Resource):
         return '', 204
 
 
+class RecipeIngredientList(Resource):
+    def get(self, recipe_id):
+        print(recipe_id)
+        return '', 204
+
+
+class RecipeIngredientDetail(Resource):
+    def get(self, recipe_id, id):
+        # ingredient_id
+        # amount
+        # unit_id
+        # alternative_ids
+        # required
+        # prepack_type_id
+        # stage_id
+        return '', 204
+
+
 class RecipeImg(Resource):
     def get(self, id):
         response = send_from_directory(directory='images/', filename='{}.jpg'.format(id))
