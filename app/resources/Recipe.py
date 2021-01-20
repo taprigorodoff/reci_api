@@ -62,20 +62,90 @@ class RecipeDetail(Resource):
 
 class RecipeIngredientList(Resource):
     def get(self, recipe_id):
-        print(recipe_id)
-        return '', 204
+        recipe = Recipe.query.filter(Recipe.id == recipe_id).first_or_404()
+        recipe_ingredients = {}
+        for ob in recipe.recipe_recipe_ingredients_0:
+            ingredient = ob.as_json()
+
+            stage_name = ingredient.pop('stage')
+
+            tmp_ingredients = recipe_ingredients.get(stage_name, [])
+            tmp_ingredients.append(ingredient)
+            recipe_ingredients.update({stage_name: tmp_ingredients})
+
+        return recipe_ingredients, 200
+
+    def post(self, recipe_id):
+        unit_ids = [cat.id for cat in db.session.query(DUnit.id).all()]  # todo кэш
+        prepack_type_ids = [cat.id for cat in db.session.query(DPrepackType.id).all()]  # todo кэш
+        stage_ids = [cat.id for cat in db.session.query(DStage.id).all()]  # todo кэш
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('ingredient_id', type=int, help='{error_msg}')  # check id
+        parser.add_argument('amount')
+        parser.add_argument('required', type=bool, help='{error_msg}')
+        parser.add_argument('unit_id', type=int, choices=unit_ids, help='Bad choice: {error_msg}')
+        parser.add_argument('prepack_type_id', type=int, required=False, nullable=True, choices=prepack_type_ids,
+                            help='Bad choice: {error_msg}')
+        parser.add_argument('stage_id', type=int, required=False, choices=stage_ids, help='Bad choice: {error_msg}')
+        parser.add_argument('alternative_ids', type=int, required=False, action='append',
+                            help='{error_msg}')  # check id
+
+        args = parser.parse_args()
+
+        # todo посмотреть (в джанго?) куда убрать влидацию
+        ingredient = Ingredient.query.filter(Ingredient.id == args['ingredient_id']).first()
+        if not ingredient:
+            return {
+                       'messages': 'Bad choice for ingredient_id'
+                   }, 400
+        if args['alternative_ids']:
+            for alternative_id in args['alternative_ids']:
+                ingredient = Ingredient.query.filter(Ingredient.id == alternative_id).first()
+
+                if not ingredient:
+                    return {
+                               'messages': 'Bad choice for alternative_ids'
+                           }, 400
+
+        exist_ingredient = RecipeIngredient.query.filter(RecipeIngredient.ingredient_id == args['ingredient_id'],
+                                                         RecipeIngredient.recipe_id == recipe_id).first()
+        if exist_ingredient:
+            return {
+                       'messages': 'already added'
+                   }, 400
+
+        ri = RecipeIngredient()
+        ri.recipe_id = recipe_id
+        ri.ingredient_id = args['ingredient_id']
+        ri.amount = args['amount']
+        ri.unit_id = args['unit_id']
+        ri.required = args['required']
+        ri.prepack_type_id = args['prepack_type_id']
+        ri.stage_id = args['stage_id']
+
+        if args['alternative_ids']:
+            for alternative_id in args['alternative_ids']:
+                ri.ingredient_alternatives.append(Ingredient.query.get(alternative_id))
+
+        db.session.add(ri)
+
+        try:
+            db.session.commit()
+        except exc.SQLAlchemyError as e:
+            db.session.rollback()
+            return {
+                       'messages': e.args
+                   }, 500
+
+        return ri.as_json(), 200
 
 
 class RecipeIngredientDetail(Resource):
     def get(self, recipe_id, id):
-        # ingredient_id
-        # amount
-        # unit_id
-        # alternative_ids
-        # required
-        # prepack_type_id
-        # stage_id
-        return '', 204
+        ri = RecipeIngredient.query.filter(RecipeIngredient.id == id,
+                                           RecipeIngredient.recipe_id == recipe_id).first_or_404()
+        return ri.as_json(), 200
 
 
 class RecipeImg(Resource):
