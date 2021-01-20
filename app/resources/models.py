@@ -156,7 +156,7 @@ class Recipe(db.Model):
     portion = db.Column(db.Integer)
     cook_time = db.Column(db.Integer)
     all_time = db.Column(db.Integer)
-    categories = db.relationship('DCategory', secondary=t_recipe_categories,
+    categories = db.relationship('DCategory', secondary=t_recipe_categories, passive_deletes=True,
                                  backref=db.backref('Recipe', lazy='dynamic'))
 
     def as_full_json(self):
