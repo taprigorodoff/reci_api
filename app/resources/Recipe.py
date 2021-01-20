@@ -1,7 +1,8 @@
 from flask_restful import Resource, reqparse
-from flask import send_from_directory
+from flask import send_from_directory, jsonify
 from sqlalchemy import exc
-from resources.models import Recipe, DCategory
+from resources.models import Recipe, RecipeIngredient, Ingredient
+from resources.models import DCategory, DStage, DUnit, DPrepackType
 from app import db
 
 
@@ -12,7 +13,7 @@ class RecipeList(Resource):
         return results, 200
 
     def post(self):
-        cat_ids = [cat.id for cat in db.session.query(DCategory.id).all()]
+        cat_ids = [cat.id for cat in db.session.query(DCategory.id).all()]  # todo кэш
 
         parser = reqparse.RequestParser()
         parser.add_argument('name')
@@ -24,7 +25,6 @@ class RecipeList(Resource):
 
         args = parser.parse_args()
 
-        # todo разобрться, почему r в другой сессии(импорт?)
         recipe = Recipe()
         recipe.name = args['name']
         recipe.description = args['description']
@@ -34,9 +34,8 @@ class RecipeList(Resource):
         for cat_id in args['categories']:
             recipe.categories.append(DCategory.query.get(cat_id))
 
-        current_db_sessions = db.session.object_session(recipe)
-        current_db_sessions.add(recipe)
-        current_db_sessions.commit()
+        db.session.add(recipe)
+        db.session.commit()
 
         return recipe.as_json(), 200
 
@@ -48,14 +47,12 @@ class RecipeDetail(Resource):
 
     def delete(self, id):
         r = Recipe.query.filter(Recipe.id == id).first_or_404()
-        # todo разобрться, почему r в другой сессии(импорт?)
-        current_db_sessions = db.session.object_session(r)
-        current_db_sessions.add(r)
-        current_db_sessions.delete(r)
+        db.session.add(r)
+        db.session.delete(r)
         try:
-            current_db_sessions.commit()
+            db.session.commit()
         except exc.SQLAlchemyError as e:
-            current_db_sessions.rollback()
+            db.session.rollback()
             return {
                        'messages': e.args
                    }, 500

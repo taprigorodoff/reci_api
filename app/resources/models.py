@@ -1,8 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
-import json
-import base64
-
-db = SQLAlchemy()
+from app import db
 
 
 class DCategory(db.Model):

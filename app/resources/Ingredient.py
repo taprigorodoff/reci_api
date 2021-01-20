@@ -54,10 +54,8 @@ class IngredientDetail(Resource):
         ingredient.store_section_id = args['store_section_id']
 
         try:
-            # todo разобрться, почему r в другой сессии(импорт?)
-            current_db_sessions = db.session.object_session(ingredient)
-            current_db_sessions.add(ingredient)
-            current_db_sessions.commit()
+            db.session.add(ingredient)
+            db.session.commit()
             return ingredient.as_json(), 200
         except exc.SQLAlchemyError as e:
             return {
@@ -96,10 +94,9 @@ class StoreSectionDetail(Resource):
         args = parser.parse_args()
         section = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
         section.name = args['name']
-        # todo разобрться, почему r в другой сессии(импорт?)
-        current_db_sessions = db.session.object_session(section)
-        current_db_sessions.add(section)
-        current_db_sessions.commit()
+
+        db.session.add(section)
+        db.session.commit()
         return section.as_json(), 201
 
     def delete(self, id):
@@ -112,10 +109,8 @@ class StoreSectionDetail(Resource):
                        "message": "store section already use"
                    }, 422
 
-        # todo разобрться, почему r в другой сессии(импорт?)
-        current_db_sessions = db.session.object_session(r)
-        current_db_sessions.add(r)
-        current_db_sessions.delete(r)
-        current_db_sessions.commit()
+        db.session.add(r)
+        db.session.delete(r)
+        db.session.commit()
 
         return '', 204
