@@ -54,20 +54,6 @@ class DUnit(db.Model):
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
 
 
-class IngredientAlternative(db.Model):
-    __tablename__ = 'ingredient_alternatives'
-
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
-    recipe_ingredient_id = db.Column(db.ForeignKey('recipe_ingredients.id'))
-    ingredient_id = db.Column(db.ForeignKey('ingredients.id'))
-
-    ingredient = db.relationship('Ingredient', primaryjoin='IngredientAlternative.ingredient_id == Ingredient.id',
-                                 backref='ingredient_alternatives')
-    recipe_ingredient = db.relationship('RecipeIngredient',
-                                        primaryjoin='IngredientAlternative.recipe_ingredient_id == RecipeIngredient.id',
-                                        backref='ingredient_alternatives')
-
-
 class Ingredient(db.Model):
     __tablename__ = 'ingredients'
 
@@ -96,6 +82,12 @@ t_recipe_categories = db.Table(
     db.Column('recipe_id', db.ForeignKey('recipes.id'))
 )
 
+t_ingredient_alternatives = db.Table(
+    'ingredient_alternatives',
+    db.Column('recipe_ingredient_id', db.ForeignKey('recipe_ingredients.id')),
+    db.Column('ingredient_id', db.ForeignKey('ingredients.id'))
+)
+
 
 class RecipeIngredient(db.Model):
     __tablename__ = 'recipe_ingredients'
@@ -112,6 +104,7 @@ class RecipeIngredient(db.Model):
 
     ingredient = db.relationship('Ingredient', primaryjoin='RecipeIngredient.ingredient_id == Ingredient.id',
                                  backref='recipe_ingredients')
+    ingredient_alternatives = db.relationship('Ingredient', secondary=t_ingredient_alternatives, passive_deletes=True)
     prepack_type = db.relationship('DPrepackType', primaryjoin='RecipeIngredient.prepack_type_id == DPrepackType.id',
                                    backref='recipe_ingredients')
     recipe_as_ingredient = db.relationship('Recipe',
@@ -125,6 +118,7 @@ class RecipeIngredient(db.Model):
 
     def as_json(self):
         result = {
+            'id': self.id,
             'ingredient': self.ingredient.name,  # TODO может быть не ингредиент, а рецепт. ссылка?
             'amount': self.amount,
             'unit': self.unit.name
@@ -141,7 +135,7 @@ class RecipeIngredient(db.Model):
         if self.ingredient_alternatives:
             alternatives = []
             for ai in self.ingredient_alternatives:
-                alternatives.append(ai.ingredient.name)
+                alternatives.append(ai.name)
             result.update({'alternatives': alternatives})
 
         return result
