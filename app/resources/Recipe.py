@@ -7,7 +7,8 @@ from app import db
 
 from flask_apispec.views import MethodResource
 from flask_apispec import doc, use_kwargs
-from marshmallow import Schema, fields, ValidationError, validate
+from marshmallow import Schema, fields, ValidationError, validate, types
+import typing
 
 
 class RecipeRequestSchema(Schema):
@@ -90,20 +91,22 @@ class RecipeIngredientRequestSchema(Schema):
     amount = fields.Float(required=True, description="API type of awesome API")
     required = fields.Bool(required=True, description="API type of awesome API")
     unit_id = fields.Integer(required=True, description="API type of awesome API")
-    prepack_type_id = fields.Integer(required=True, description="API type of awesome API") #required=False, nullable=True,
-    stage_id = fields.Integer(required=True, description="API type of awesome API") #required=False, nullable=True,
+    prepack_type_id = fields.Integer(required=False, description="API type of awesome API") #nullable=True,
+    stage_id = fields.Integer(required=False, description="API type of awesome API") #nullable=True,
     alternative_ids = fields.List(cls_or_instance=fields.Integer(),
-                             required=True,
-                             description="API type of awesome API") #required=False, nullable=True,
+                             required=False,
+                             description="API type of awesome API") #nullable=True,
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
         abort(400, message=error.messages)
-        
-class RecipeIngredientList(MethodResource, Resource):
-    @doc(description='Create recipe ingredient.')
-    @use_kwargs(RecipeIngredientRequestSchema(), location=('json'))
-    #todo документировать коды ошибок
-    def post(self, recipe_id, **kwargs):
+
+    def validate(
+        self,
+        data: typing.Mapping,
+        *,
+        many: typing.Optional[bool] = None,
+        partial: typing.Optional[typing.Union[bool, types.StrSequenceOrSet]] = None
+    ) -> typing.Dict[str, typing.List[str]]:
 
         unit_ids = [cat.id for cat in db.session.query(DUnit.id).all()]  # todo кэш
         prepack_type_ids = [cat.id for cat in db.session.query(DPrepackType.id).all()]  # todo кэш
@@ -111,7 +114,7 @@ class RecipeIngredientList(MethodResource, Resource):
 
         # todo посмотреть (в джанго?) куда убрать влидацию
         validation_errors = {}
-        if kwargs['unit_id'] not in unit_ids:
+        if data['unit_id'] not in unit_ids:
             validation_errors.update(
                 {
                     'unit_id': [
@@ -119,7 +122,8 @@ class RecipeIngredientList(MethodResource, Resource):
                     ]
                 }
             )
-        if kwargs['prepack_type_id'] not in prepack_type_ids:
+
+        if 'prepack_type_id' in data.keys() and data['prepack_type_id'] not in prepack_type_ids:
             validation_errors.update(
                 {
                     'prepack_type_id': [
@@ -127,7 +131,8 @@ class RecipeIngredientList(MethodResource, Resource):
                     ]
                 }
             )
-        if kwargs['stage_id'] not in stage_ids:
+
+        if 'stage_id' in data.keys() and data['stage_id'] not in stage_ids:
             validation_errors.update(
                 {
                     'stage_id': [
@@ -136,7 +141,7 @@ class RecipeIngredientList(MethodResource, Resource):
                 }
             )
 
-        ingredient = Ingredient.query.filter(Ingredient.id == kwargs['ingredient_id']).first()
+        ingredient = Ingredient.query.filter(Ingredient.id == data['ingredient_id']).first()
         if not ingredient:
             validation_errors.update(
                 {
@@ -145,8 +150,8 @@ class RecipeIngredientList(MethodResource, Resource):
                     ]
                 }
             )
-        if kwargs['alternative_ids']:
-            for alternative_id in kwargs['alternative_ids']:
+        if 'alternative_ids' in data.keys():
+            for alternative_id in data['alternative_ids']:
                 ingredient = Ingredient.query.filter(Ingredient.id == alternative_id).first()
 
                 if not ingredient:
@@ -158,22 +163,41 @@ class RecipeIngredientList(MethodResource, Resource):
                         }
                     )
 
-        #todo проверить существование рецепта!
-        exist_ingredient = RecipeIngredient.query.filter(RecipeIngredient.ingredient_id == kwargs['ingredient_id'],
-                                                         RecipeIngredient.recipe_id == recipe_id).first()
-        if exist_ingredient:
-            validation_errors.update(
-                {
-                    'ingredient_id': [
-                        f'Already added to recipe {recipe_id}'
-                    ]
-                }
-            )
+        return validation_errors
+
+        
+class RecipeIngredientList(MethodResource, Resource):
+    @doc(description='Create recipe ingredient.')
+    @use_kwargs(RecipeIngredientRequestSchema(), location=('json'))
+    #todo документировать коды ошибок
+    def post(self, recipe_id, **kwargs):
+
+        validation_errors = RecipeIngredientRequestSchema().validate(kwargs)
+
+        recipe = Recipe.query.filter(Recipe.id == recipe_id).first()
+        for exist_ingredient in recipe.recipe_recipe_ingredients_0:
+            if exist_ingredient.ingredient_id == kwargs['ingredient_id']:
+                validation_errors.update(
+                    {
+                        'ingredient_id': [
+                            f'Already added to recipe {recipe_id}'
+                        ]
+                    }
+                )
+            for alternative_ingredient in exist_ingredient.ingredient_alternatives:
+                if alternative_ingredient.id == kwargs['ingredient_id']:
+                    validation_errors.update(
+                        {
+                            'ingredient_id': [
+                                f'Already added as alternative to recipe {recipe_id}'
+                            ]
+                        }
+                    )
 
         if validation_errors:
             return {
-                'messages': validation_errors
-            }, 400
+                       'messages': validation_errors
+                   }, 400
 
         ri = RecipeIngredient()
         ri.recipe_id = recipe_id
@@ -225,50 +249,63 @@ class RecipeIngredientDetail(MethodResource, Resource):
 
     @doc(description='Update recipe ingredient.')
     @use_kwargs(RecipeIngredientRequestSchema(), location=('json'))
-    def put(self, recipe_id, id):
-        unit_ids = [cat.id for cat in db.session.query(DUnit.id).all()]  # todo кэш
-        prepack_type_ids = [cat.id for cat in db.session.query(DPrepackType.id).all()]  # todo кэш
-        stage_ids = [cat.id for cat in db.session.query(DStage.id).all()]  # todo кэш
+    def put(self, recipe_id, id, **kwargs):
 
-        parser = reqparse.RequestParser()
-        parser.add_argument('ingredient_id', type=int, help='{error_msg}')  # check id
-        parser.add_argument('amount')
-        parser.add_argument('required', type=bool, help='{error_msg}')
-        parser.add_argument('unit_id', type=int, choices=unit_ids, help='Bad choice: {error_msg}')
-        parser.add_argument('prepack_type_id', type=int, required=False, nullable=True, choices=prepack_type_ids,
-                            help='Bad choice: {error_msg}')
-        parser.add_argument('stage_id', type=int, required=False, choices=stage_ids, help='Bad choice: {error_msg}')
-        parser.add_argument('alternative_ids', type=int, required=False, action='append',
-                            help='{error_msg}')  # check id
+        recipe_ingredient = RecipeIngredient.query.filter(RecipeIngredient.id == id).first_or_404()
+        recipe = Recipe.query.filter(Recipe.id == recipe_id).first()
 
-        args = parser.parse_args()
-
-        ingredient = Ingredient.query.filter(Ingredient.id == args['ingredient_id']).first()
-        if not ingredient:
+        if not recipe:
             return {
-                       'messages': 'Bad choice for ingredient_id'
-                   }, 400
-        if args['alternative_ids']:
-            for alternative_id in args['alternative_ids']:
-                ingredient = Ingredient.query.filter(Ingredient.id == alternative_id).first()
+                       'messages': f'recipe {recipe_id} is not found'
+                   }, 404
 
-                if not ingredient:
-                    return {
-                               'messages': 'Bad choice for alternative_ids'
-                           }, 400
+        if id not in [exist_recipe_ingredient.id for exist_recipe_ingredient in recipe.recipe_recipe_ingredients_0]:
+            return {
+                       'messages': f'recipe_ingredient {id} is not connected with recipe {recipe_id}'
+                   }, 400
+
+        validation_errors = RecipeIngredientRequestSchema().validate(kwargs)
+
+        if recipe_ingredient.ingredient_id != kwargs['ingredient_id']:
+
+            for exist_ingredient in recipe.recipe_recipe_ingredients_0:
+                if exist_ingredient.ingredient_id == kwargs['ingredient_id']:
+                    validation_errors.update(
+                        {
+                            'ingredient_id': [
+                                f'Already added to recipe {recipe_id}'
+                            ]
+                        }
+                    )
+                for alternative_ingredient in exist_ingredient.ingredient_alternatives:
+                    if alternative_ingredient.id == kwargs['ingredient_id']:
+                        validation_errors.update(
+                            {
+                                'ingredient_id': [
+                                    f'Already added as alternative to recipe {recipe_id}'
+                                ]
+                            }
+                        )
+
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
 
         ri = RecipeIngredient.query.filter(RecipeIngredient.id == id).first()
 
-        ri.ingredient_id = args['ingredient_id']
-        ri.amount = args['amount']
-        ri.unit_id = args['unit_id']
-        ri.required = args['required']
-        ri.prepack_type_id = args['prepack_type_id']
-        ri.stage_id = args['stage_id']
+        ri.ingredient_id = kwargs['ingredient_id']
+        ri.amount = kwargs['amount']
+        ri.unit_id = kwargs['unit_id']
+        ri.required = kwargs['required']
+        ri.prepack_type_id = kwargs['prepack_type_id']
+        ri.stage_id = kwargs['stage_id']
 
-        if args['alternative_ids']:
-            for alternative_id in args['alternative_ids']:
-                ri.ingredient_alternatives.append(Ingredient.query.get(alternative_id))
+        if kwargs['alternative_ids']:
+            new_ingredient_alternatives = []
+            for alternative_id in kwargs['alternative_ids']:
+                new_ingredient_alternatives.append(Ingredient.query.get(alternative_id))
+            ri.ingredient_alternatives = new_ingredient_alternatives
 
         db.session.add(ri)
 
