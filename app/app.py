@@ -31,7 +31,7 @@ from resources.Ingredient import StoreSectionList, StoreSectionDetail
 
 api.add_resource(RecipeList, '/recipe')
 api.add_resource(RecipeDetail, '/recipe/<id>')
-api.add_resource(RecipeImg, '/recipe/img/<id>') #todo /recipe/<id>/img
+api.add_resource(RecipeImg, '/recipe/<id>/img')
 api.add_resource(RecipeIngredientList, '/recipe/<recipe_id>/ingredient')
 api.add_resource(RecipeIngredientDetail, '/recipe/<recipe_id>/ingredient/<id>')
 
