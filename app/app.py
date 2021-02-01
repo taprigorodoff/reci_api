@@ -46,3 +46,8 @@ docs.register(RecipeDetail)
 docs.register(RecipeIngredientList)
 docs.register(RecipeIngredientDetail)
 docs.register(RecipeImg)
+
+docs.register(IngredientList)
+docs.register(IngredientDetail)
+docs.register(StoreSectionList)
+docs.register(StoreSectionDetail)
