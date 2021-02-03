@@ -71,6 +71,35 @@ class RecipeDetail(MethodResource, Resource):
         recipe = Recipe.query.filter(Recipe.id == id).first_or_404()
         return recipe.as_full_json(), 200
 
+    @doc(description='Update recipe.')
+    @use_kwargs(RecipeRequestSchema(), location=('json'))
+    def put(self, id, **kwargs):
+        recipe = Recipe.query.filter(Recipe.id == id).first_or_404()
+        recipe.name = kwargs['name']
+        recipe.description = kwargs['description']
+        recipe.portion = kwargs['portion']
+        recipe.cook_time = kwargs['cook_time']
+        recipe.all_time = kwargs['all_time']
+        for category_id in kwargs['categories']:
+            category = DCategory.query.get(category_id)
+            if category:
+                recipe.categories.append(category)
+            else:
+                return {
+                           'messages': 'bad choice for category'
+                       }, 400
+
+        try:
+            db.session.add(recipe)
+            db.session.commit()
+        except exc.SQLAlchemyError as e:
+            db.session.rollback()
+            return {
+                       'messages': e.args
+                   }, 500
+
+        return recipe.as_json(), 200
+
     @doc(description='Delete recipe.')
     def delete(self, id):
         r = Recipe.query.filter(Recipe.id == id).first_or_404()
