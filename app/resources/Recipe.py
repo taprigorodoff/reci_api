@@ -12,7 +12,7 @@ import typing
 
 
 class RecipeRequestSchema(Schema):
-    name = fields.String(required=True, description="API type of awesome API", validate=validate.Length(max=3))
+    name = fields.String(required=True, description="API type of awesome API", validate=validate.Length(max=100))
     description = fields.String(required=True, description="API type of awesome API")
     portion = fields.Integer(required=True, description="API type of awesome API")
     cook_time = fields.Integer(required=True, description="API type of awesome API")
@@ -23,6 +23,34 @@ class RecipeRequestSchema(Schema):
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
         abort(400, message=error.messages)
+
+    def validate(
+        self,
+        data: typing.Mapping,
+        *,
+        many: typing.Optional[bool] = None,
+        partial: typing.Optional[typing.Union[bool, types.StrSequenceOrSet]] = None
+    ) -> typing.Dict[str, typing.List[str]]:
+        categories_ids = [cat.id for cat in db.session.query(DCategory.id).all()]  # todo кэш
+        validation_errors = {}
+        for category_id in data['categories']:
+            if category_id not in categories_ids:
+                validation_errors.update(
+                    {
+                        'categories': [
+                            'bad choice for category_id'
+                        ]
+                    }
+                )
+        if Recipe.query.filter(Recipe.name == data["name"]).first():
+            validation_errors.update(
+                {
+                    'name': [
+                        'Already exist'
+                    ]
+                }
+            )
+        return validation_errors
 
 
 class RecipeList(MethodResource, Resource):
@@ -38,6 +66,11 @@ class RecipeList(MethodResource, Resource):
     @doc(description='Create recipe.')
     @use_kwargs(RecipeRequestSchema(), location=('json'))
     def post(self, **kwargs):
+        validation_errors = RecipeRequestSchema().validate(kwargs)
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
         recipe = Recipe()
         recipe.name = kwargs['name']
         recipe.description = kwargs['description']
@@ -48,10 +81,6 @@ class RecipeList(MethodResource, Resource):
             category = DCategory.query.get(category_id)
             if category:
                 recipe.categories.append(category)
-            else:
-                return {
-                           'messages': 'bad choice for category'
-                       }, 400
 
         try:
             db.session.add(recipe)
@@ -74,6 +103,11 @@ class RecipeDetail(MethodResource, Resource):
     @doc(description='Update recipe.')
     @use_kwargs(RecipeRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
+        validation_errors = RecipeRequestSchema().validate(kwargs)
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
         recipe = Recipe.query.filter(Recipe.id == id).first_or_404()
         recipe.name = kwargs['name']
         recipe.description = kwargs['description']
@@ -84,10 +118,6 @@ class RecipeDetail(MethodResource, Resource):
             category = DCategory.query.get(category_id)
             if category:
                 recipe.categories.append(category)
-            else:
-                return {
-                           'messages': 'bad choice for category'
-                       }, 400
 
         try:
             db.session.add(recipe)
