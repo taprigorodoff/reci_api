@@ -60,7 +60,7 @@ class RecipeList(MethodResource, Resource):
             db.session.rollback()
             return {
                        'messages': e.args
-                   }, 500
+                   }, 503
 
         return recipe.as_json(), 200
 
@@ -96,7 +96,7 @@ class RecipeDetail(MethodResource, Resource):
             db.session.rollback()
             return {
                        'messages': e.args
-                   }, 500
+                   }, 503
 
         return recipe.as_json(), 200
 
@@ -111,7 +111,7 @@ class RecipeDetail(MethodResource, Resource):
             db.session.rollback()
             return {
                        'messages': e.args
-                   }, 500
+                   }, 503
 
         return '', 204
 
@@ -249,7 +249,7 @@ class RecipeIngredientList(MethodResource, Resource):
             db.session.rollback()
             return {
                        'messages': e.args
-                   }, 500
+                   }, 503
 
         return ri.as_json(), 200
 
@@ -344,7 +344,7 @@ class RecipeIngredientDetail(MethodResource, Resource):
             db.session.rollback()
             return {
                        'messages': e.args
-                   }, 500
+                   }, 503
 
         return ri.as_json(), 201
 
@@ -359,7 +359,7 @@ class RecipeIngredientDetail(MethodResource, Resource):
             db.session.rollback()
             return {
                        'messages': e.args
-                   }, 500
+                   }, 503
 
 
 class RecipeImg(MethodResource, Resource):
