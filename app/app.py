@@ -28,6 +28,7 @@ from resources.Recipe import RecipeDetail, RecipeImg, RecipeList
 from resources.Recipe import RecipeIngredientList, RecipeIngredientDetail
 from resources.Ingredient import IngredientList, IngredientDetail
 from resources.Ingredient import StoreSectionList, StoreSectionDetail
+from resources.Menu import MenuList, MenuDetail
 
 api.add_resource(RecipeList, '/recipe')
 api.add_resource(RecipeDetail, '/recipe/<id>')
@@ -41,6 +42,9 @@ api.add_resource(IngredientDetail, '/ingredient/<id>')
 api.add_resource(StoreSectionList, '/store_section')
 api.add_resource(StoreSectionDetail, '/store_section/<id>')
 
+api.add_resource(MenuList, '/menu')
+api.add_resource(MenuDetail, '/menu/<id>')
+
 docs.register(RecipeList)
 docs.register(RecipeDetail)
 docs.register(RecipeIngredientList)
@@ -51,3 +55,6 @@ docs.register(IngredientList)
 docs.register(IngredientDetail)
 docs.register(StoreSectionList)
 docs.register(StoreSectionDetail)
+
+docs.register(MenuList)
+docs.register(MenuDetail)

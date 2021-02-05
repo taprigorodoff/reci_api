@@ -84,6 +84,24 @@ t_ingredient_alternatives = db.Table(
     db.Column('ingredient_id', db.ForeignKey('ingredients.id'))
 )
 
+t_menu_dishes = db.Table(
+    'menu_dishes',
+    db.Column('menu_id', db.ForeignKey('menu.id')),
+    db.Column('recipe_id', db.ForeignKey('recipes.id')),
+    db.Column('portion')
+)
+
+
+class Menu(db.Model):
+    __tablename__ = 'menu'
+    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    name = db.Column(db.Text)
+
+    def as_json(self):
+        return {
+            'id': self.id,
+            'name': self.name
+        }
 
 class RecipeIngredient(db.Model):
     __tablename__ = 'recipe_ingredients'
