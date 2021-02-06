@@ -84,23 +84,33 @@ t_ingredient_alternatives = db.Table(
     db.Column('ingredient_id', db.ForeignKey('ingredients.id'))
 )
 
-t_menu_dishes = db.Table(
-    'menu_dishes',
-    db.Column('menu_id', db.ForeignKey('menu.id')),
-    db.Column('recipe_id', db.ForeignKey('recipes.id')),
-    db.Column('portion')
-)
 
+class MenuDish(db.Model):
+    __tablename__ = 'menu_dishes'
+    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    menu_id = db.Column(db.ForeignKey('menu.id'))
+    recipe_id = db.Column(db.ForeignKey('recipes.id'))
+    menu = db.relationship('Menu', primaryjoin='MenuDish.menu_id == Menu.id', backref='menu_dishes')
+    recipe = db.relationship('Recipe', primaryjoin='MenuDish.recipe_id == Recipe.id')
+    portion = db.Column(db.Integer, server_default=db.FetchedValue())
+
+    def as_json(self):
+        return {
+            'recipe_id': self.recipe_id,
+            'portion': self.portion
+        }
 
 class Menu(db.Model):
     __tablename__ = 'menu'
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     name = db.Column(db.Text)
+    dishes = db.relationship('Recipe', secondary='menu_dishes', passive_deletes=True)
 
     def as_json(self):
         return {
             'id': self.id,
-            'name': self.name
+            'name': self.name,
+            'dishes': self.dishes
         }
 
 class RecipeIngredient(db.Model):
