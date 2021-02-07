@@ -87,7 +87,8 @@ class MenuDetail(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-class MenuDishesRequestSchema(Schema):
+
+class MenuDishRequestSchema(Schema):
     recipe_id = fields.Integer(required=True, description="API type of awesome API")
     portion = fields.Integer(required=True, description="API type of awesome API")
 
@@ -106,27 +107,28 @@ class MenuDishesRequestSchema(Schema):
         if not recipe:
             validation_errors.update(
                 {
-                    'ingredient_id': [
-                        'Bad choice for ingredient_id'
+                    'recipe_id': [
+                        'Bad choice for recipe_id'
                     ]
                 }
             )
 
         return validation_errors
 
-class MenuDishesList(MethodResource, Resource):
-    @doc(description='Read all menus.')
+
+class MenuDishList(MethodResource, Resource):
+    @doc(description='Read all menu dishes.')
     def get(self, menu_id):
         r = MenuDish.query.filter(MenuDish.menu_id == menu_id).all()
         results = [ob.as_json() for ob in r]
         return results, 200
 
     @doc(description='Create recipe ingredient.')
-    @use_kwargs(MenuDishesRequestSchema(), location=('json'))
+    @use_kwargs(MenuDishRequestSchema(), location=('json'))
     # todo документировать коды ошибок
     def post(self, menu_id, **kwargs):
 
-        validation_errors = MenuDishesRequestSchema().validate(kwargs)
+        validation_errors = MenuDishRequestSchema().validate(kwargs)
 
         menu = Menu.query.filter(Menu.id == menu_id).first()
         for exist_dish in menu.dishes:
@@ -159,3 +161,60 @@ class MenuDishesList(MethodResource, Resource):
                    }, 503
 
         return menu_dish.as_json(), 200
+
+class MenuDishDetail(MethodResource, Resource):
+    @doc(description='Read menu dish.')
+    def get(self, menu_id, id):
+        r = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
+        return r.as_json(), 200
+
+    @doc(description='Update menu dish.')
+    @use_kwargs(MenuDishRequestSchema(), location=('json'))
+    def put(self, menu_id, id, **kwargs):
+        validation_errors = MenuDishRequestSchema().validate(kwargs)
+
+        menu = Menu.query.filter(Menu.id == menu_id).first_or_404()
+        for exist_dish in menu.dishes:
+            if exist_dish.id == kwargs['recipe_id']:
+                validation_errors.update(
+                    {
+                        'recipe_id': [
+                            f'Already added to menu {menu_id}'
+                        ]
+                    }
+                )
+
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
+
+        menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
+
+        menu_dish.recipe_id = kwargs['recipe_id']
+        menu_dish.portion = kwargs['portion']
+
+        try:
+            db.session.add(menu_dish)
+            db.session.commit()
+        except exc.SQLAlchemyError as e:
+            db.session.rollback()
+            return {
+                       'messages': e.args
+                   }, 503
+
+        return menu_dish.as_json(), 200
+
+    @doc(description='Delete menu dish.')
+    def delete(self, menu_id, id):
+        menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
+
+        try:
+            db.session.add(menu_dish)
+            db.session.delete(menu_dish)
+            db.session.commit()
+            return '', 204
+        except exc.SQLAlchemyError as e:
+            return {
+                       'messages': e.args
+                   }, 503

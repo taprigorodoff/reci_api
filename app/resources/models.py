@@ -96,6 +96,7 @@ class MenuDish(db.Model):
 
     def as_json(self):
         return {
+            'id': self.id,
             'recipe_id': self.recipe_id,
             'portion': self.portion
         }
