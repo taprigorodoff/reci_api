@@ -253,7 +253,7 @@ class MenuShoppingList(MethodResource, Resource):
                         )
                 else:
                     good = {
-                        ingredient.ingredient.name: [
+                        good_name: [
                             {
                                 'amount': ingredient.amount/ingredient.recipe.portion*menu_dish.portion,
                                 'unit': ingredient.unit.name
