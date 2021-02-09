@@ -218,3 +218,50 @@ class MenuDishDetail(MethodResource, Resource):
             return {
                        'messages': e.args
                    }, 503
+
+
+class MenuShoppingList(MethodResource, Resource):
+    @doc(description='Read shopping list for menu.')
+    def get(self, menu_id):
+        r = MenuDish.query.filter(MenuDish.menu_id == menu_id).all()
+        result = {}
+
+        for menu_dish in r:
+            for ingredient in menu_dish.recipe.recipe_recipe_ingredients_0:
+
+                good_name = ingredient.ingredient.name
+                if ingredient.ingredient_alternatives:
+                    good_name += '/' + '/'.join([i.name for i in ingredient.ingredient_alternatives])
+
+                store_section = ingredient.ingredient.store_section.name
+                tmp_goods = result.get(store_section, {})
+                good = tmp_goods.get(good_name, {})
+
+                if good:
+                    was_update = False
+                    for need in good:
+                        if need['unit'] == ingredient.unit.name:
+                            need['amount'] += ingredient.amount/ingredient.recipe.portion*menu_dish.portion
+                            was_update = True
+
+                    if not was_update:
+                        good.append(
+                            {
+                                'amount': ingredient.amount/ingredient.recipe.portion*menu_dish.portion,
+                                'unit': ingredient.unit.name
+                            }
+                        )
+                else:
+                    good = {
+                        ingredient.ingredient.name: [
+                            {
+                                'amount': ingredient.amount/ingredient.recipe.portion*menu_dish.portion,
+                                'unit': ingredient.unit.name
+                            }
+                        ]
+                    }
+                    tmp_goods.update(good)
+
+                result.update({store_section: tmp_goods})
+
+        return result, 200
