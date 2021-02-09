@@ -1,13 +1,13 @@
-from flask_restful import Resource, reqparse, abort
+from flask_restful import Resource, abort
 from sqlalchemy import exc
-from resources.models import Ingredient, DStoreSection, RecipeIngredient
+from resources.models import Foodstuff, DStoreSection, RecipeIngredient
 from app import db
 from flask_apispec.views import MethodResource
 from flask_apispec import doc, use_kwargs
 from marshmallow import Schema, fields, ValidationError, validate, types
 import typing
 
-class IngredientRequestSchema(Schema):
+class FoodstuffRequestSchema(Schema):
     name = fields.String(required=True, description="API type of awesome API", validate=validate.Length(max=50))
     store_section_id = fields.Integer(required=True, description="API type of awesome API")
 
@@ -31,7 +31,7 @@ class IngredientRequestSchema(Schema):
                     ]
                 }
             )
-        if Ingredient.query.filter(Ingredient.name == data["name"]).first():
+        if Foodstuff.query.filter(Foodstuff.name == data["name"]).first():
             validation_errors.update(
                 {
                     'name': [
@@ -41,74 +41,74 @@ class IngredientRequestSchema(Schema):
             )
         return validation_errors
 
-class IngredientList(MethodResource, Resource):
-    @doc(description='Read all ingredients.')
+class FoodstuffList(MethodResource, Resource):
+    @doc(description='Read all Foodstuffs.')
     def get(self):
-        r = Ingredient.query.order_by(Ingredient.id.desc()).all()
+        r = Foodstuff.query.order_by(Foodstuff.id.desc()).all()
         results = {}
 
         for ob in r:
-            ingredient = ob.as_json()
-            store_section = ingredient.pop('store_section', 'other')['name']
-            tmp_ingredients = results.get(store_section, [])
-            tmp_ingredients.append(ingredient)
-            results.update({store_section: tmp_ingredients})
+            foodstuff = ob.as_json()
+            store_section = foodstuff.pop('store_section', 'other')['name']
+            tmp_foodstuffs = results.get(store_section, [])
+            tmp_foodstuffs.append(foodstuff)
+            results.update({store_section: tmp_foodstuffs})
 
         return results, 200
 
-    @doc(description='Create ingredient.')
-    @use_kwargs(IngredientRequestSchema(), location=('json'))
+    @doc(description='Create foodstuff.')
+    @use_kwargs(FoodstuffRequestSchema(), location=('json'))
     def post(self, **kwargs):
-        validation_errors = IngredientRequestSchema().validate(kwargs)
+        validation_errors = FoodstuffRequestSchema().validate(kwargs)
         if validation_errors:
             return {
                        'messages': validation_errors
                    }, 400
 
-        ingredient = Ingredient()
-        ingredient.name = kwargs['name']
-        ingredient.store_section_id = kwargs['store_section_id']
+        foodstuff = Foodstuff()
+        foodstuff.name = kwargs['name']
+        foodstuff.store_section_id = kwargs['store_section_id']
 
         try:
-            db.session.add(ingredient)
+            db.session.add(foodstuff)
             db.session.commit()
-            return ingredient.as_json(), 201
+            return foodstuff.as_json(), 201
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
 
 
-class IngredientDetail(MethodResource, Resource):
-    @doc(description='Read ingredient.')
+class FoodstuffDetail(MethodResource, Resource):
+    @doc(description='Read foodstuff.')
     def get(self, id):
-        r = Ingredient.query.filter(Ingredient.id == id).first_or_404()
+        r = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
         return r.as_json(), 200
 
-    @doc(description='Update ingredient.')
-    @use_kwargs(IngredientRequestSchema(), location=('json'))
+    @doc(description='Update foodstuff.')
+    @use_kwargs(FoodstuffRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
-        validation_errors = IngredientRequestSchema().validate(kwargs)
+        validation_errors = FoodstuffRequestSchema().validate(kwargs)
         if validation_errors:
             return {
                        'messages': validation_errors
                    }, 400
-        ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
-        ingredient.name = kwargs['name']
-        ingredient.store_section_id = kwargs['store_section_id']
+        foodstuff = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
+        foodstuff.name = kwargs['name']
+        foodstuff.store_section_id = kwargs['store_section_id']
 
         try:
-            db.session.add(ingredient)
+            db.session.add(foodstuff)
             db.session.commit()
-            return ingredient.as_json(), 200
+            return foodstuff.as_json(), 200
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
 
-    @doc(description='Delete ingredient.')
+    @doc(description='Delete foodstuff.')
     def delete(self, id):
-        r = Ingredient.query.filter(Ingredient.id == id).first_or_404()
+        r = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
 
         use_ingredients = RecipeIngredient.query.filter(RecipeIngredient.ingredient_id == id).all()
         if use_ingredients:
@@ -203,8 +203,8 @@ class StoreSectionDetail(MethodResource, Resource):
     def delete(self, id):
         r = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
 
-        ingredients = Ingredient.query.filter(Ingredient.store_section_id == id).all()
-        if ingredients:
+        foodstuffs = Foodstuff.query.filter(Foodstuff.store_section_id == id).all()
+        if foodstuffs:
             return {
                        "message": "store section already use"
                    }, 422

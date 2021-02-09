@@ -1,7 +1,7 @@
 from flask_restful import Resource, reqparse, abort
 from flask import send_from_directory
 from sqlalchemy import exc
-from resources.models import Recipe, RecipeIngredient, Ingredient
+from resources.models import Recipe, RecipeIngredient, Foodstuff
 from resources.models import DCategory, DStage, DUnit, DPrepackType
 from app import db
 
@@ -200,8 +200,8 @@ class RecipeIngredientRequestSchema(Schema):
                 }
             )
 
-        ingredient = Ingredient.query.filter(Ingredient.id == data['ingredient_id']).first()
-        if not ingredient:
+        foodstuff = Foodstuff.query.filter(Foodstuff.id == data['ingredient_id']).first()
+        if not foodstuff:
             validation_errors.update(
                 {
                     'ingredient_id': [
@@ -211,9 +211,9 @@ class RecipeIngredientRequestSchema(Schema):
             )
         if 'alternative_ids' in data.keys():
             for alternative_id in data['alternative_ids']:
-                ingredient = Ingredient.query.filter(Ingredient.id == alternative_id).first()
+                foodstuff = Foodstuff.query.filter(Foodstuff.id == alternative_id).first()
 
-                if not ingredient:
+                if not foodstuff:
                     validation_errors.update(
                         {
                             'alternative_id': [
@@ -269,7 +269,7 @@ class RecipeIngredientList(MethodResource, Resource):
 
         if kwargs['alternative_ids']:
             for alternative_id in kwargs['alternative_ids']:
-                ri.ingredient_alternatives.append(Ingredient.query.get(alternative_id))
+                ri.ingredient_alternatives.append(Foodstuff.query.get(alternative_id))
 
         db.session.add(ri)
 
@@ -363,7 +363,7 @@ class RecipeIngredientDetail(MethodResource, Resource):
         if kwargs['alternative_ids']:
             new_ingredient_alternatives = []
             for alternative_id in kwargs['alternative_ids']:
-                new_ingredient_alternatives.append(Ingredient.query.get(alternative_id))
+                new_ingredient_alternatives.append(Foodstuff.query.get(alternative_id))
             ri.ingredient_alternatives = new_ingredient_alternatives
 
         db.session.add(ri)

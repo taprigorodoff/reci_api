@@ -26,8 +26,8 @@ docs = FlaskApiSpec(app)
 
 from resources.Recipe import RecipeDetail, RecipeImg, RecipeList
 from resources.Recipe import RecipeIngredientList, RecipeIngredientDetail
-from resources.Ingredient import IngredientList, IngredientDetail
-from resources.Ingredient import StoreSectionList, StoreSectionDetail
+from resources.Foodstuff import FoodstuffList, FoodstuffDetail
+from resources.Foodstuff import StoreSectionList, StoreSectionDetail
 from resources.Menu import MenuList, MenuDetail
 from resources.Menu import MenuDishList, MenuDishDetail
 from resources.Menu import MenuShoppingList
@@ -38,8 +38,8 @@ api.add_resource(RecipeImg, '/recipe/<id>/img')
 api.add_resource(RecipeIngredientList, '/recipe/<recipe_id>/ingredient')
 api.add_resource(RecipeIngredientDetail, '/recipe/<recipe_id>/ingredient/<id>')
 
-api.add_resource(IngredientList, '/ingredient')
-api.add_resource(IngredientDetail, '/ingredient/<id>')
+api.add_resource(FoodstuffList, '/foodstuff')
+api.add_resource(FoodstuffDetail, '/foodstuff/<id>')
 
 api.add_resource(StoreSectionList, '/store_section')
 api.add_resource(StoreSectionDetail, '/store_section/<id>')
@@ -58,8 +58,8 @@ docs.register(RecipeIngredientList)
 docs.register(RecipeIngredientDetail)
 docs.register(RecipeImg)
 
-docs.register(IngredientList)
-docs.register(IngredientDetail)
+docs.register(FoodstuffList)
+docs.register(FoodstuffDetail)
 docs.register(StoreSectionList)
 docs.register(StoreSectionDetail)
 
