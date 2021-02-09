@@ -25,7 +25,7 @@ app.config.update({
 docs = FlaskApiSpec(app)
 
 from resources.Recipe import RecipeDetail, RecipeImg, RecipeList
-from resources.Recipe import RecipeIngredientList, RecipeIngredientDetail
+from resources.Recipe import IngredientList, IngredientDetail
 from resources.Foodstuff import FoodstuffList, FoodstuffDetail
 from resources.Foodstuff import StoreSectionList, StoreSectionDetail
 from resources.Menu import MenuList, MenuDetail
@@ -35,8 +35,8 @@ from resources.Menu import MenuShoppingList
 api.add_resource(RecipeList, '/recipe')
 api.add_resource(RecipeDetail, '/recipe/<id>')
 api.add_resource(RecipeImg, '/recipe/<id>/img')
-api.add_resource(RecipeIngredientList, '/recipe/<recipe_id>/ingredient')
-api.add_resource(RecipeIngredientDetail, '/recipe/<recipe_id>/ingredient/<id>')
+api.add_resource(IngredientList, '/recipe/<recipe_id>/ingredient')
+api.add_resource(IngredientDetail, '/recipe/<recipe_id>/ingredient/<id>')
 
 api.add_resource(FoodstuffList, '/foodstuff')
 api.add_resource(FoodstuffDetail, '/foodstuff/<id>')
@@ -54,8 +54,8 @@ api.add_resource(MenuShoppingList, '/menu/<menu_id>/shopping')
 
 docs.register(RecipeList)
 docs.register(RecipeDetail)
-docs.register(RecipeIngredientList)
-docs.register(RecipeIngredientDetail)
+docs.register(IngredientList)
+docs.register(IngredientDetail)
 docs.register(RecipeImg)
 
 docs.register(FoodstuffList)

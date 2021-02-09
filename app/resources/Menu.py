@@ -227,7 +227,7 @@ class MenuShoppingList(MethodResource, Resource):
         result = {}
 
         for menu_dish in r:
-            for ingredient in menu_dish.recipe.recipe_recipe_ingredients_0:
+            for ingredient in menu_dish.recipe.ingredients:
 
                 good_name = ingredient.ingredient.name
                 if ingredient.ingredient_alternatives:

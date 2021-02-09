@@ -80,8 +80,8 @@ t_recipe_categories = db.Table(
 
 t_ingredient_alternatives = db.Table(
     'ingredient_alternatives',
-    db.Column('recipe_ingredient_id', db.ForeignKey('recipe_ingredients.id')),
-    db.Column('ingredient_id', db.ForeignKey('foodstuff.id'))
+    db.Column('ingredient_id', db.ForeignKey('ingredient.id')),
+    db.Column('foodstuff_id', db.ForeignKey('foodstuff.id'))
 )
 
 
@@ -101,6 +101,7 @@ class MenuDish(db.Model):
             'portion': self.portion
         }
 
+
 class Menu(db.Model):
     __tablename__ = 'menu'
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
@@ -114,37 +115,31 @@ class Menu(db.Model):
             'dishes': self.dishes
         }
 
-class RecipeIngredient(db.Model):
-    __tablename__ = 'recipe_ingredients'
 
+class Ingredient(db.Model):
+    __tablename__ = 'ingredient'
+
+    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     recipe_id = db.Column(db.ForeignKey('recipes.id'))
-    ingredient_id = db.Column(db.ForeignKey('foodstuff.id'))
+    foodstuff_id = db.Column(db.ForeignKey('foodstuff.id'))
     unit_id = db.Column(db.ForeignKey('d_units.id'))
     amount = db.Column(db.Float(53))
-    required = db.Column(db.Boolean, server_default=db.FetchedValue())
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     prepack_type_id = db.Column(db.ForeignKey('d_prepack_types.id'))
     stage_id = db.Column(db.ForeignKey('d_stages.id'))
-    recipe_as_ingredient_id = db.Column(db.ForeignKey('recipes.id'))
 
-    ingredient = db.relationship('Foodstuff', primaryjoin='RecipeIngredient.ingredient_id == Foodstuff.id',
-                                 backref='recipe_ingredients')
+    recipe = db.relationship('Recipe', primaryjoin='Ingredient.recipe_id == Recipe.id',
+                             backref='ingredients')
+    foodstuff = db.relationship('Foodstuff', primaryjoin='Ingredient.foodstuff_id == Foodstuff.id')
     ingredient_alternatives = db.relationship('Foodstuff', secondary=t_ingredient_alternatives, passive_deletes=True)
-    prepack_type = db.relationship('DPrepackType', primaryjoin='RecipeIngredient.prepack_type_id == DPrepackType.id',
-                                   backref='recipe_ingredients')
-    recipe_as_ingredient = db.relationship('Recipe',
-                                           primaryjoin='RecipeIngredient.recipe_as_ingredient_id == Recipe.id',
-                                           backref='recipe_recipe_ingredients')
-    recipe = db.relationship('Recipe', primaryjoin='RecipeIngredient.recipe_id == Recipe.id',
-                             backref='recipe_recipe_ingredients_0')
-    stage = db.relationship('DStage', primaryjoin='RecipeIngredient.stage_id == DStage.id',
-                            backref='recipe_ingredients')
-    unit = db.relationship('DUnit', primaryjoin='RecipeIngredient.unit_id == DUnit.id', backref='recipe_ingredients')
+
+    prepack_type = db.relationship('DPrepackType', primaryjoin='Ingredient.prepack_type_id == DPrepackType.id')
+    stage = db.relationship('DStage', primaryjoin='Ingredient.stage_id == DStage.id')
+    unit = db.relationship('DUnit', primaryjoin='Ingredient.unit_id == DUnit.id')
 
     def as_json(self):
         result = {
             'id': self.id,
-            'ingredient': self.ingredient.name,  # TODO может быть не ингредиент, а рецепт. ссылка?
+            'foodstuff': self.foodstuff.name,
             'amount': self.amount,
             'unit': self.unit.name
         }
@@ -182,7 +177,7 @@ class Recipe(db.Model):
         recipe_ingredients = {}
         pre_pack = {}
 
-        for ob in self.recipe_recipe_ingredients_0:
+        for ob in self.ingredients:
             ingredient = ob.as_json()
 
             stage_name = ingredient.pop('stage')

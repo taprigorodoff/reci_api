@@ -1,6 +1,6 @@
 from flask_restful import Resource, abort
 from sqlalchemy import exc
-from resources.models import Foodstuff, DStoreSection, RecipeIngredient
+from resources.models import Foodstuff, DStoreSection, Ingredient
 from app import db
 from flask_apispec.views import MethodResource
 from flask_apispec import doc, use_kwargs
@@ -110,7 +110,7 @@ class FoodstuffDetail(MethodResource, Resource):
     def delete(self, id):
         r = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
 
-        use_ingredients = RecipeIngredient.query.filter(RecipeIngredient.ingredient_id == id).all()
+        use_ingredients = Ingredient.query.filter(Ingredient.foodstuff_id == id).all()
         if use_ingredients:
             return {
                        "message": "ingredient already use in recipes"

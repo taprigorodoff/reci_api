@@ -1,7 +1,7 @@
-from flask_restful import Resource, reqparse, abort
+from flask_restful import Resource, abort
 from flask import send_from_directory
 from sqlalchemy import exc
-from resources.models import Recipe, RecipeIngredient, Foodstuff
+from resources.models import Recipe, Ingredient, Foodstuff
 from resources.models import DCategory, DStage, DUnit, DPrepackType
 from app import db
 
@@ -145,10 +145,10 @@ class RecipeDetail(MethodResource, Resource):
 
         return '', 204
 
-class RecipeIngredientRequestSchema(Schema):
-    ingredient_id = fields.Integer(required=True, description="API type of awesome API")
+
+class IngredientRequestSchema(Schema):
+    foodstuff_id = fields.Integer(required=True, description="API type of awesome API")
     amount = fields.Float(required=True, description="API type of awesome API")
-    required = fields.Bool(required=True, description="API type of awesome API")
     unit_id = fields.Integer(required=True, description="API type of awesome API")
     prepack_type_id = fields.Integer(required=False, description="API type of awesome API") #nullable=True,
     stage_id = fields.Integer(required=False, description="API type of awesome API") #nullable=True,
@@ -200,12 +200,12 @@ class RecipeIngredientRequestSchema(Schema):
                 }
             )
 
-        foodstuff = Foodstuff.query.filter(Foodstuff.id == data['ingredient_id']).first()
+        foodstuff = Foodstuff.query.filter(Foodstuff.id == data['foodstuff_id']).first()
         if not foodstuff:
             validation_errors.update(
                 {
-                    'ingredient_id': [
-                        'Bad choice for ingredient_id'
+                    'foodstuff_id': [
+                        'Bad choice for foodstuff_id'
                     ]
                 }
             )
@@ -225,29 +225,30 @@ class RecipeIngredientRequestSchema(Schema):
         return validation_errors
 
         
-class RecipeIngredientList(MethodResource, Resource):
+class IngredientList(MethodResource, Resource):
     @doc(description='Create recipe ingredient.')
-    @use_kwargs(RecipeIngredientRequestSchema(), location=('json'))
+    @use_kwargs(IngredientRequestSchema(), location=('json'))
     #todo документировать коды ошибок
     def post(self, recipe_id, **kwargs):
 
-        validation_errors = RecipeIngredientRequestSchema().validate(kwargs)
+        validation_errors = IngredientRequestSchema().validate(kwargs)
 
-        recipe = Recipe.query.filter(Recipe.id == recipe_id).first()
-        for exist_ingredient in recipe.recipe_recipe_ingredients_0:
-            if exist_ingredient.ingredient_id == kwargs['ingredient_id']:
+        recipe = Recipe.query.filter(Recipe.id == recipe_id).first_or_404()
+
+        for exist_ingredient in recipe.ingredients:
+            if exist_ingredient.foodstuff_id == kwargs['foodstuff_id']:
                 validation_errors.update(
                     {
-                        'ingredient_id': [
+                        'foodstuff_id': [
                             f'Already added to recipe {recipe_id}'
                         ]
                     }
                 )
             for alternative_ingredient in exist_ingredient.ingredient_alternatives:
-                if alternative_ingredient.id == kwargs['ingredient_id']:
+                if alternative_ingredient.id == kwargs['foodstuff_id']:
                     validation_errors.update(
                         {
-                            'ingredient_id': [
+                            'foodstuff_id': [
                                 f'Already added as alternative to recipe {recipe_id}'
                             ]
                         }
@@ -258,16 +259,17 @@ class RecipeIngredientList(MethodResource, Resource):
                        'messages': validation_errors
                    }, 400
 
-        ri = RecipeIngredient()
+        ri = Ingredient()
         ri.recipe_id = recipe_id
-        ri.ingredient_id = kwargs['ingredient_id']
+        ri.foodstuff_id = kwargs['foodstuff_id']
         ri.amount = kwargs['amount']
         ri.unit_id = kwargs['unit_id']
-        ri.required = kwargs['required']
-        ri.prepack_type_id = kwargs['prepack_type_id']
-        ri.stage_id = kwargs['stage_id']
+        if 'prepack_type_id' in kwargs.keys():
+            ri.prepack_type_id = kwargs['prepack_type_id']
+        if 'stage_id' in kwargs.keys():
+            ri.stage_id = kwargs['stage_id']
 
-        if kwargs['alternative_ids']:
+        if 'alternative_ids' in kwargs.keys():
             for alternative_id in kwargs['alternative_ids']:
                 ri.ingredient_alternatives.append(Foodstuff.query.get(alternative_id))
 
@@ -286,61 +288,61 @@ class RecipeIngredientList(MethodResource, Resource):
     @doc(description='Read recipe ingredients.')
     def get(self, recipe_id):
         recipe = Recipe.query.filter(Recipe.id == recipe_id).first_or_404()
-        recipe_ingredients = {}
-        for ob in recipe.recipe_recipe_ingredients_0:
+        ingredients = {}
+        for ob in recipe.ingredients:
             ingredient = ob.as_json()
 
             stage_name = ingredient.pop('stage')
 
-            tmp_ingredients = recipe_ingredients.get(stage_name, [])
+            tmp_ingredients = ingredients.get(stage_name, [])
             tmp_ingredients.append(ingredient)
-            recipe_ingredients.update({stage_name: tmp_ingredients})
+            ingredients.update({stage_name: tmp_ingredients})
 
-        return recipe_ingredients, 200
+        return ingredients, 200
 
 
-class RecipeIngredientDetail(MethodResource, Resource):
+class IngredientDetail(MethodResource, Resource):
     @doc(description='Read recipe ingredient.')
     def get(self, recipe_id, id):
-        ri = RecipeIngredient.query.filter(RecipeIngredient.id == id,
-                                           RecipeIngredient.recipe_id == recipe_id).first_or_404()
+        ri = Ingredient.query.filter(Ingredient.id == id,
+                                           Ingredient.recipe_id == recipe_id).first_or_404()
         return ri.as_json(), 200
 
     @doc(description='Update recipe ingredient.')
-    @use_kwargs(RecipeIngredientRequestSchema(), location=('json'))
+    @use_kwargs(IngredientRequestSchema(), location=('json'))
     def put(self, recipe_id, id, **kwargs):
 
-        recipe_ingredient = RecipeIngredient.query.filter(RecipeIngredient.id == id).first_or_404()
-        recipe = Recipe.query.filter(Recipe.id == recipe_id).first()
+        recipe = Recipe.query.filter(Recipe.id == recipe_id).first_or_404()
+        ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
 
         if not recipe:
             return {
                        'messages': f'recipe {recipe_id} is not found'
                    }, 404
 
-        if id not in [exist_recipe_ingredient.id for exist_recipe_ingredient in recipe.recipe_recipe_ingredients_0]:
+        if ingredient.recipe_id != recipe_id:
             return {
-                       'messages': f'recipe_ingredient {id} is not connected with recipe {recipe_id}'
+                       'messages': f'ingredient {id} is not connected with recipe {recipe_id}'
                    }, 400
 
-        validation_errors = RecipeIngredientRequestSchema().validate(kwargs)
+        validation_errors = IngredientRequestSchema().validate(kwargs)
 
-        if recipe_ingredient.ingredient_id != kwargs['ingredient_id']:
+        if ingredient.foodstuff_id != kwargs['foodstuff_id']:
 
-            for exist_ingredient in recipe.recipe_recipe_ingredients_0:
-                if exist_ingredient.ingredient_id == kwargs['ingredient_id']:
+            for exist_ingredient in recipe.ingredients:
+                if exist_ingredient.foodstuff_id == kwargs['foodstuff_id']:
                     validation_errors.update(
                         {
-                            'ingredient_id': [
+                            'foodstuff_id': [
                                 f'Already added to recipe {recipe_id}'
                             ]
                         }
                     )
                 for alternative_ingredient in exist_ingredient.ingredient_alternatives:
-                    if alternative_ingredient.id == kwargs['ingredient_id']:
+                    if alternative_ingredient.id == kwargs['foodstuff_id']:
                         validation_errors.update(
                             {
-                                'ingredient_id': [
+                                'foodstuff_id': [
                                     f'Already added as alternative to recipe {recipe_id}'
                                 ]
                             }
@@ -351,22 +353,27 @@ class RecipeIngredientDetail(MethodResource, Resource):
                        'messages': validation_errors
                    }, 400
 
-        ri = RecipeIngredient.query.filter(RecipeIngredient.id == id).first()
+        ingredient.foodstuff_id = kwargs['foodstuff_id']
+        ingredient.amount = kwargs['amount']
+        ingredient.unit_id = kwargs['unit_id']
+        if 'prepack_type_id' in kwargs.keys():
+            ingredient.prepack_type_id = kwargs['prepack_type_id']
+        else:
+            ingredient.prepack_type_id = None
+        if 'stage_id' in kwargs.keys():
+            ingredient.stage_id = kwargs['stage_id']
+        else:
+            ingredient.stage_id = None
 
-        ri.ingredient_id = kwargs['ingredient_id']
-        ri.amount = kwargs['amount']
-        ri.unit_id = kwargs['unit_id']
-        ri.required = kwargs['required']
-        ri.prepack_type_id = kwargs['prepack_type_id']
-        ri.stage_id = kwargs['stage_id']
-
-        if kwargs['alternative_ids']:
+        if 'alternative_ids' in kwargs.keys():
             new_ingredient_alternatives = []
             for alternative_id in kwargs['alternative_ids']:
                 new_ingredient_alternatives.append(Foodstuff.query.get(alternative_id))
-            ri.ingredient_alternatives = new_ingredient_alternatives
+            ingredient.ingredient_alternatives = new_ingredient_alternatives
+        else:
+            ingredient.ingredient_alternatives = []
 
-        db.session.add(ri)
+        db.session.add(ingredient)
 
         try:
             db.session.commit()
@@ -376,15 +383,21 @@ class RecipeIngredientDetail(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return ri.as_json(), 201
+        return ingredient.as_json(), 201
 
     @doc(description='Delete recipe ingredient.')
     def delete(self, recipe_id, id):
-        r = RecipeIngredient.query.filter(RecipeIngredient.id == id).first_or_404()
-        db.session.add(r)
-        db.session.delete(r)
+        ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
+        if ingredient.recipe_id != recipe_id:
+            return {
+                       'messages': f'ingredient {id} is not connected with recipe {recipe_id}'
+                   }, 400
+
         try:
+            db.session.add(ingredient)
+            db.session.delete(ingredient)
             db.session.commit()
+            return '', 204
         except exc.SQLAlchemyError as e:
             db.session.rollback()
             return {
