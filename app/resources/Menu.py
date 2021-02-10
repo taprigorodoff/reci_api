@@ -1,6 +1,6 @@
 from flask_restful import Resource, abort
 from sqlalchemy import exc
-from resources.models import Recipe
+from resources.models import Dish
 from resources.models import Menu, MenuDish
 from app import db
 
@@ -89,7 +89,7 @@ class MenuDetail(MethodResource, Resource):
 
 
 class MenuDishRequestSchema(Schema):
-    recipe_id = fields.Integer(required=True, description="API type of awesome API")
+    dish_id = fields.Integer(required=True, description="API type of awesome API")
     portion = fields.Integer(required=True, description="API type of awesome API")
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
@@ -103,12 +103,12 @@ class MenuDishRequestSchema(Schema):
         partial: typing.Optional[typing.Union[bool, types.StrSequenceOrSet]] = None
     ) -> typing.Dict[str, typing.List[str]]:
         validation_errors = {}
-        recipe = Recipe.query.filter(Recipe.id == data['recipe_id']).first()
-        if not recipe:
+        dish = Dish.query.filter(Dish.id == data['dish_id']).first()
+        if not dish:
             validation_errors.update(
                 {
-                    'recipe_id': [
-                        'Bad choice for recipe_id'
+                    'dish_id': [
+                        'Bad choice for dish_id'
                     ]
                 }
             )
@@ -123,7 +123,7 @@ class MenuDishList(MethodResource, Resource):
         results = [ob.as_json() for ob in r]
         return results, 200
 
-    @doc(description='Create recipe ingredient.')
+    @doc(description='Create dish ingredient.')
     @use_kwargs(MenuDishRequestSchema(), location=('json'))
     # todo документировать коды ошибок
     def post(self, menu_id, **kwargs):
@@ -132,10 +132,10 @@ class MenuDishList(MethodResource, Resource):
 
         menu = Menu.query.filter(Menu.id == menu_id).first()
         for exist_dish in menu.dishes:
-            if exist_dish.id == kwargs['recipe_id']:
+            if exist_dish.id == kwargs['dish_id']:
                 validation_errors.update(
                     {
-                        'recipe_id': [
+                        'dish_id': [
                             f'Already added to menu {menu_id}'
                         ]
                     }
@@ -148,7 +148,7 @@ class MenuDishList(MethodResource, Resource):
 
         menu_dish = MenuDish()
         menu_dish.menu_id = menu_id
-        menu_dish.recipe_id = kwargs['recipe_id']
+        menu_dish.dish_id = kwargs['dish_id']
         menu_dish.portion = kwargs['portion']
 
         try:
@@ -175,10 +175,10 @@ class MenuDishDetail(MethodResource, Resource):
 
         menu = Menu.query.filter(Menu.id == menu_id).first_or_404()
         for exist_dish in menu.dishes:
-            if exist_dish.id == kwargs['recipe_id']:
+            if exist_dish.id == kwargs['dish_id']:
                 validation_errors.update(
                     {
-                        'recipe_id': [
+                        'dish_id': [
                             f'Already added to menu {menu_id}'
                         ]
                     }
@@ -191,7 +191,7 @@ class MenuDishDetail(MethodResource, Resource):
 
         menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
 
-        menu_dish.recipe_id = kwargs['recipe_id']
+        menu_dish.dish_id = kwargs['dish_id']
         menu_dish.portion = kwargs['portion']
 
         try:
@@ -227,13 +227,13 @@ class MenuShoppingList(MethodResource, Resource):
         result = {}
 
         for menu_dish in r:
-            for ingredient in menu_dish.recipe.ingredients:
+            for ingredient in menu_dish.dish.ingredients:
 
-                good_name = ingredient.ingredient.name
+                good_name = ingredient.foodstuff.name
                 if ingredient.ingredient_alternatives:
                     good_name += '/' + '/'.join([i.name for i in ingredient.ingredient_alternatives])
 
-                store_section = ingredient.ingredient.store_section.name
+                store_section = ingredient.foodstuff.store_section.name
                 tmp_goods = result.get(store_section, {})
                 good = tmp_goods.get(good_name, {})
 
@@ -241,13 +241,13 @@ class MenuShoppingList(MethodResource, Resource):
                     was_update = False
                     for need in good:
                         if need['unit'] == ingredient.unit.name:
-                            need['amount'] += ingredient.amount/ingredient.recipe.portion*menu_dish.portion
+                            need['amount'] += ingredient.amount / ingredient.dish.portion * menu_dish.portion
                             was_update = True
 
                     if not was_update:
                         good.append(
                             {
-                                'amount': ingredient.amount/ingredient.recipe.portion*menu_dish.portion,
+                                'amount': ingredient.amount / ingredient.dish.portion * menu_dish.portion,
                                 'unit': ingredient.unit.name
                             }
                         )
@@ -255,7 +255,7 @@ class MenuShoppingList(MethodResource, Resource):
                     good = {
                         good_name: [
                             {
-                                'amount': ingredient.amount/ingredient.recipe.portion*menu_dish.portion,
+                                'amount': ingredient.amount / ingredient.dish.portion * menu_dish.portion,
                                 'unit': ingredient.unit.name
                             }
                         ]

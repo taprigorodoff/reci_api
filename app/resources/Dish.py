@@ -1,8 +1,8 @@
 from flask_restful import Resource, abort
 from flask import send_from_directory
 from sqlalchemy import exc
-from resources.models import Recipe, Ingredient, Foodstuff
-from resources.models import DCategory, DStage, DUnit, DPrepackType
+from resources.models import Dish, Ingredient, Foodstuff
+from resources.models import DCategory, DStage, DUnit, DPrePackType
 from app import db
 
 from flask_apispec.views import MethodResource
@@ -11,7 +11,7 @@ from marshmallow import Schema, fields, ValidationError, validate, types
 import typing
 
 
-class RecipeRequestSchema(Schema):
+class DishRequestSchema(Schema):
     name = fields.String(required=True, description="API type of awesome API", validate=validate.Length(max=100))
     description = fields.String(required=True, description="API type of awesome API")
     portion = fields.Integer(required=True, description="API type of awesome API")
@@ -42,7 +42,7 @@ class RecipeRequestSchema(Schema):
                         ]
                     }
                 )
-        if Recipe.query.filter(Recipe.name == data["name"]).first():
+        if Dish.query.filter(Dish.name == data["name"]).first():
             validation_errors.update(
                 {
                     'name': [
@@ -53,37 +53,37 @@ class RecipeRequestSchema(Schema):
         return validation_errors
 
 
-class RecipeList(MethodResource, Resource):
-    @doc(description='Read all recipes.')
+class DishList(MethodResource, Resource):
+    @doc(description='Read all dishes.')
     def get(self):
         '''
         Get method represents a GET API method
         '''
-        r = Recipe.query.order_by(Recipe.id.desc()).all()
+        r = Dish.query.order_by(Dish.id.desc()).all()
         results = [ob.as_json() for ob in r]
         return results, 200
 
-    @doc(description='Create recipe.')
-    @use_kwargs(RecipeRequestSchema(), location=('json'))
+    @doc(description='Create dish.')
+    @use_kwargs(DishRequestSchema(), location=('json'))
     def post(self, **kwargs):
-        validation_errors = RecipeRequestSchema().validate(kwargs)
+        validation_errors = DishRequestSchema().validate(kwargs)
         if validation_errors:
             return {
                        'messages': validation_errors
                    }, 400
-        recipe = Recipe()
-        recipe.name = kwargs['name']
-        recipe.description = kwargs['description']
-        recipe.portion = kwargs['portion']
-        recipe.cook_time = kwargs['cook_time']
-        recipe.all_time = kwargs['all_time']
+        dish = Dish()
+        dish.name = kwargs['name']
+        dish.description = kwargs['description']
+        dish.portion = kwargs['portion']
+        dish.cook_time = kwargs['cook_time']
+        dish.all_time = kwargs['all_time']
         for category_id in kwargs['categories']:
             category = DCategory.query.get(category_id)
             if category:
-                recipe.categories.append(category)
+                dish.categories.append(category)
 
         try:
-            db.session.add(recipe)
+            db.session.add(dish)
             db.session.commit()
         except exc.SQLAlchemyError as e:
             db.session.rollback()
@@ -91,36 +91,36 @@ class RecipeList(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return recipe.as_json(), 200
+        return dish.as_json(), 200
 
 
-class RecipeDetail(MethodResource, Resource):
-    @doc(description='Read recipe.')
+class DishDetail(MethodResource, Resource):
+    @doc(description='Read dish.')
     def get(self, id):
-        recipe = Recipe.query.filter(Recipe.id == id).first_or_404()
-        return recipe.as_full_json(), 200
+        dish = Dish.query.filter(Dish.id == id).first_or_404()
+        return dish.as_full_json(), 200
 
-    @doc(description='Update recipe.')
-    @use_kwargs(RecipeRequestSchema(), location=('json'))
+    @doc(description='Update dish.')
+    @use_kwargs(DishRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
-        validation_errors = RecipeRequestSchema().validate(kwargs)
+        validation_errors = DishRequestSchema().validate(kwargs)
         if validation_errors:
             return {
                        'messages': validation_errors
                    }, 400
-        recipe = Recipe.query.filter(Recipe.id == id).first_or_404()
-        recipe.name = kwargs['name']
-        recipe.description = kwargs['description']
-        recipe.portion = kwargs['portion']
-        recipe.cook_time = kwargs['cook_time']
-        recipe.all_time = kwargs['all_time']
+        dish = Dish.query.filter(Dish.id == id).first_or_404()
+        dish.name = kwargs['name']
+        dish.description = kwargs['description']
+        dish.portion = kwargs['portion']
+        dish.cook_time = kwargs['cook_time']
+        dish.all_time = kwargs['all_time']
         for category_id in kwargs['categories']:
             category = DCategory.query.get(category_id)
             if category:
-                recipe.categories.append(category)
+                dish.categories.append(category)
 
         try:
-            db.session.add(recipe)
+            db.session.add(dish)
             db.session.commit()
         except exc.SQLAlchemyError as e:
             db.session.rollback()
@@ -128,11 +128,11 @@ class RecipeDetail(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return recipe.as_json(), 200
+        return dish.as_json(), 200
 
-    @doc(description='Delete recipe.')
+    @doc(description='Delete dish.')
     def delete(self, id):
-        r = Recipe.query.filter(Recipe.id == id).first_or_404()
+        r = Dish.query.filter(Dish.id == id).first_or_404()
         db.session.add(r)
         db.session.delete(r)
         try:
@@ -168,7 +168,7 @@ class IngredientRequestSchema(Schema):
     ) -> typing.Dict[str, typing.List[str]]:
 
         unit_ids = [cat.id for cat in db.session.query(DUnit.id).all()]  # todo кэш
-        pre_pack_type_ids = [cat.id for cat in db.session.query(DPrepackType.id).all()]  # todo кэш
+        pre_pack_type_ids = [cat.id for cat in db.session.query(DPrePackType.id).all()]  # todo кэш
         stage_ids = [cat.id for cat in db.session.query(DStage.id).all()]  # todo кэш
 
         # todo посмотреть (в джанго?) куда убрать влидацию
@@ -226,21 +226,21 @@ class IngredientRequestSchema(Schema):
 
         
 class IngredientList(MethodResource, Resource):
-    @doc(description='Create recipe ingredient.')
+    @doc(description='Create dish ingredient.')
     @use_kwargs(IngredientRequestSchema(), location=('json'))
     #todo документировать коды ошибок
-    def post(self, recipe_id, **kwargs):
+    def post(self, dish_id, **kwargs):
 
         validation_errors = IngredientRequestSchema().validate(kwargs)
 
-        recipe = Recipe.query.filter(Recipe.id == recipe_id).first_or_404()
+        dish = Dish.query.filter(Dish.id == dish_id).first_or_404()
 
-        for exist_ingredient in recipe.ingredients:
+        for exist_ingredient in dish.ingredients:
             if exist_ingredient.foodstuff_id == kwargs['foodstuff_id']:
                 validation_errors.update(
                     {
                         'foodstuff_id': [
-                            f'Already added to recipe {recipe_id}'
+                            f'Already added to dish {dish_id}'
                         ]
                     }
                 )
@@ -249,7 +249,7 @@ class IngredientList(MethodResource, Resource):
                     validation_errors.update(
                         {
                             'foodstuff_id': [
-                                f'Already added as alternative to recipe {recipe_id}'
+                                f'Already added as alternative to dish {dish_id}'
                             ]
                         }
                     )
@@ -260,7 +260,7 @@ class IngredientList(MethodResource, Resource):
                    }, 400
 
         ri = Ingredient()
-        ri.recipe_id = recipe_id
+        ri.dish_id = dish_id
         ri.foodstuff_id = kwargs['foodstuff_id']
         ri.amount = kwargs['amount']
         ri.unit_id = kwargs['unit_id']
@@ -285,11 +285,11 @@ class IngredientList(MethodResource, Resource):
 
         return ri.as_json(), 200
 
-    @doc(description='Read recipe ingredients.')
-    def get(self, recipe_id):
-        recipe = Recipe.query.filter(Recipe.id == recipe_id).first_or_404()
+    @doc(description='Read dish ingredients.')
+    def get(self, dish_id):
+        dish = Dish.query.filter(Dish.id == dish_id).first_or_404()
         ingredients = {}
-        for ob in recipe.ingredients:
+        for ob in dish.ingredients:
             ingredient = ob.as_json()
 
             stage_name = ingredient.pop('stage')
@@ -302,39 +302,39 @@ class IngredientList(MethodResource, Resource):
 
 
 class IngredientDetail(MethodResource, Resource):
-    @doc(description='Read recipe ingredient.')
-    def get(self, recipe_id, id):
+    @doc(description='Read dish ingredient.')
+    def get(self, dish_id, id):
         ri = Ingredient.query.filter(Ingredient.id == id,
-                                           Ingredient.recipe_id == recipe_id).first_or_404()
+                                           Ingredient.dish_id == dish_id).first_or_404()
         return ri.as_json(), 200
 
-    @doc(description='Update recipe ingredient.')
+    @doc(description='Update dish ingredient.')
     @use_kwargs(IngredientRequestSchema(), location=('json'))
-    def put(self, recipe_id, id, **kwargs):
+    def put(self, dish_id, id, **kwargs):
 
-        recipe = Recipe.query.filter(Recipe.id == recipe_id).first_or_404()
+        dish = Dish.query.filter(Dish.id == dish_id).first_or_404()
         ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
 
-        if not recipe:
+        if not dish:
             return {
-                       'messages': f'recipe {recipe_id} is not found'
+                       'messages': f'dish {dish_id} is not found'
                    }, 404
 
-        if ingredient.recipe_id != recipe_id:
+        if ingredient.dish_id != dish_id:
             return {
-                       'messages': f'ingredient {id} is not connected with recipe {recipe_id}'
+                       'messages': f'ingredient {id} is not connected with dish {dish_id}'
                    }, 400
 
         validation_errors = IngredientRequestSchema().validate(kwargs)
 
         if ingredient.foodstuff_id != kwargs['foodstuff_id']:
 
-            for exist_ingredient in recipe.ingredients:
+            for exist_ingredient in dish.ingredients:
                 if exist_ingredient.foodstuff_id == kwargs['foodstuff_id']:
                     validation_errors.update(
                         {
                             'foodstuff_id': [
-                                f'Already added to recipe {recipe_id}'
+                                f'Already added to dish {dish_id}'
                             ]
                         }
                     )
@@ -343,7 +343,7 @@ class IngredientDetail(MethodResource, Resource):
                         validation_errors.update(
                             {
                                 'foodstuff_id': [
-                                    f'Already added as alternative to recipe {recipe_id}'
+                                    f'Already added as alternative to dish {dish_id}'
                                 ]
                             }
                         )
@@ -385,12 +385,12 @@ class IngredientDetail(MethodResource, Resource):
 
         return ingredient.as_json(), 201
 
-    @doc(description='Delete recipe ingredient.')
-    def delete(self, recipe_id, id):
+    @doc(description='Delete dish ingredient.')
+    def delete(self, dish_id, id):
         ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
-        if ingredient.recipe_id != recipe_id:
+        if ingredient.dish_id != dish_id:
             return {
-                       'messages': f'ingredient {id} is not connected with recipe {recipe_id}'
+                       'messages': f'ingredient {id} is not connected with dish {dish_id}'
                    }, 400
 
         try:
@@ -405,8 +405,8 @@ class IngredientDetail(MethodResource, Resource):
                    }, 503
 
 
-class RecipeImg(MethodResource, Resource):
-    @doc(description='Read recipe img.')
+class DishImg(MethodResource, Resource):
+    @doc(description='Read dish img.')
     def get(self, id):
         response = send_from_directory(directory='images/', filename='{}.jpg'.format(id))
         return response

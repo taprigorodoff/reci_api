@@ -113,7 +113,7 @@ class FoodstuffDetail(MethodResource, Resource):
         use_ingredients = Ingredient.query.filter(Ingredient.foodstuff_id == id).all()
         if use_ingredients:
             return {
-                       "message": "ingredient already use in recipes"
+                       "message": "ingredient already use in dishes"
                    }, 422
 
         try:
