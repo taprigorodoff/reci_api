@@ -31,7 +31,7 @@ class DStage(db.Model):
 
 
 class DStoreSection(db.Model):
-    __tablename__ = 'd_store_sections'
+    __tablename__ = 'd_store_section'
 
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     name = db.Column(db.Text)
@@ -55,7 +55,7 @@ class Foodstuff(db.Model):
 
     name = db.Column(db.Text)
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
-    store_section_id = db.Column(db.ForeignKey('d_store_sections.id'))
+    store_section_id = db.Column(db.ForeignKey('d_store_section.id'))
 
     store_section = db.relationship('DStoreSection', primaryjoin='Foodstuff.store_section_id == DStoreSection.id',
                                     backref='foodstuff')
