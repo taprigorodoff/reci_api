@@ -24,7 +24,7 @@ class DPrePackType(db.Model):
 
 
 class DStage(db.Model):
-    __tablename__ = 'd_stages'
+    __tablename__ = 'd_stage'
 
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     name = db.Column(db.Text)
@@ -125,7 +125,7 @@ class Ingredient(db.Model):
     unit_id = db.Column(db.ForeignKey('d_units.id'))
     amount = db.Column(db.Float(53))
     pre_pack_type_id = db.Column(db.ForeignKey('d_pre_pack_type.id'))
-    stage_id = db.Column(db.ForeignKey('d_stages.id'))
+    stage_id = db.Column(db.ForeignKey('d_stage.id'))
 
     recipe = db.relationship('Recipe', primaryjoin='Ingredient.recipe_id == Recipe.id',
                              backref='ingredients')
