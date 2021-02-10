@@ -2,12 +2,12 @@ from app import db
 
 
 class DCategory(db.Model):
-    __tablename__ = 'd_categories'
+    __tablename__ = 'd_category'
 
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     name = db.Column(db.Text)
 
-    recipes = db.relationship('Recipe', secondary='recipe_categories', backref='d_categories')
+    recipes = db.relationship('Recipe', secondary='recipe_categories', backref='d_category')
 
     def as_json(self):
         return self.name
@@ -74,7 +74,7 @@ class Foodstuff(db.Model):
 
 t_recipe_categories = db.Table(
     'recipe_categories',
-    db.Column('category_id', db.ForeignKey('d_categories.id')),
+    db.Column('category_id', db.ForeignKey('d_category.id')),
     db.Column('recipe_id', db.ForeignKey('recipes.id'))
 )
 
