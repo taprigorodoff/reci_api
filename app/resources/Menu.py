@@ -18,13 +18,13 @@ class MenuRequestSchema(Schema):
 
 
 class MenuList(MethodResource, Resource):
-    @doc(description='Read all menus.')
+    @doc(tags=['menu'], description='Read all menus.')
     def get(self):
         r = Menu.query.order_by(Menu.id.desc()).all()
         results = [ob.as_json() for ob in r]
         return results, 200
 
-    @doc(description='Create menu.')
+    @doc(tags=['menu'], description='Create menu.')
     @use_kwargs(MenuRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = MenuRequestSchema().validate(kwargs)
@@ -48,12 +48,12 @@ class MenuList(MethodResource, Resource):
 
 
 class MenuDetail(MethodResource, Resource):
-    @doc(description='Read menu.')
+    @doc(tags=['menu'], description='Read menu.')
     def get(self, id):
         r = Menu.query.filter(Menu.id == id).first_or_404()
         return r.as_json(), 200
 
-    @doc(description='Update menu.')
+    @doc(tags=['menu'], description='Update menu.')
     @use_kwargs(MenuRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = MenuRequestSchema().validate(kwargs)
@@ -73,7 +73,7 @@ class MenuDetail(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-    @doc(description='Delete menu.')
+    @doc(tags=['menu'], description='Delete menu.')
     def delete(self, id):
         r = Menu.query.filter(Menu.id == id).first_or_404()
 
@@ -117,13 +117,13 @@ class MenuDishRequestSchema(Schema):
 
 
 class MenuDishList(MethodResource, Resource):
-    @doc(description='Read all menu dishes.')
+    @doc(tags=['menu'], description='Read all menu dishes.')
     def get(self, menu_id):
         r = MenuDish.query.filter(MenuDish.menu_id == menu_id).all()
         results = [ob.as_json() for ob in r]
         return results, 200
 
-    @doc(description='Create dish ingredient.')
+    @doc(tags=['menu'], description='Create dish ingredient.')
     @use_kwargs(MenuDishRequestSchema(), location=('json'))
     # todo документировать коды ошибок
     def post(self, menu_id, **kwargs):
@@ -163,12 +163,12 @@ class MenuDishList(MethodResource, Resource):
         return menu_dish.as_json(), 200
 
 class MenuDishDetail(MethodResource, Resource):
-    @doc(description='Read menu dish.')
+    @doc(tags=['menu'], description='Read menu dish.')
     def get(self, menu_id, id):
         r = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
         return r.as_json(), 200
 
-    @doc(description='Update menu dish.')
+    @doc(tags=['menu'], description='Update menu dish.')
     @use_kwargs(MenuDishRequestSchema(), location=('json'))
     def put(self, menu_id, id, **kwargs):
         validation_errors = MenuDishRequestSchema().validate(kwargs)
@@ -205,7 +205,7 @@ class MenuDishDetail(MethodResource, Resource):
 
         return menu_dish.as_json(), 200
 
-    @doc(description='Delete menu dish.')
+    @doc(tags=['menu'], description='Delete menu dish.')
     def delete(self, menu_id, id):
         menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
 
@@ -221,7 +221,7 @@ class MenuDishDetail(MethodResource, Resource):
 
 
 class MenuShoppingList(MethodResource, Resource):
-    @doc(description='Read shopping list for menu.')
+    @doc(tags=['menu'], description='Read shopping list for menu.')
     def get(self, menu_id):
         r = MenuDish.query.filter(MenuDish.menu_id == menu_id).all()
         result = {}

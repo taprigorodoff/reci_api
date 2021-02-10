@@ -54,7 +54,7 @@ class DishRequestSchema(Schema):
 
 
 class DishList(MethodResource, Resource):
-    @doc(description='Read all dishes.')
+    @doc(tags=['dish'], description='Read all dishes.')
     def get(self):
         '''
         Get method represents a GET API method
@@ -63,7 +63,7 @@ class DishList(MethodResource, Resource):
         results = [ob.as_json() for ob in r]
         return results, 200
 
-    @doc(description='Create dish.')
+    @doc(tags=['dish'], description='Create dish.')
     @use_kwargs(DishRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = DishRequestSchema().validate(kwargs)
@@ -95,12 +95,12 @@ class DishList(MethodResource, Resource):
 
 
 class DishDetail(MethodResource, Resource):
-    @doc(description='Read dish.')
+    @doc(tags=['dish'], description='Read dish.')
     def get(self, id):
         dish = Dish.query.filter(Dish.id == id).first_or_404()
         return dish.as_full_json(), 200
 
-    @doc(description='Update dish.')
+    @doc(tags=['dish'], description='Update dish.')
     @use_kwargs(DishRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = DishRequestSchema().validate(kwargs)
@@ -130,7 +130,7 @@ class DishDetail(MethodResource, Resource):
 
         return dish.as_json(), 200
 
-    @doc(description='Delete dish.')
+    @doc(tags=['dish'], description='Delete dish.')
     def delete(self, id):
         r = Dish.query.filter(Dish.id == id).first_or_404()
         db.session.add(r)
@@ -226,7 +226,7 @@ class IngredientRequestSchema(Schema):
 
         
 class IngredientList(MethodResource, Resource):
-    @doc(description='Create dish ingredient.')
+    @doc(tags=['ingredient'], description='Create dish ingredient.')
     @use_kwargs(IngredientRequestSchema(), location=('json'))
     #todo документировать коды ошибок
     def post(self, dish_id, **kwargs):
@@ -285,7 +285,7 @@ class IngredientList(MethodResource, Resource):
 
         return ri.as_json(), 200
 
-    @doc(description='Read dish ingredients.')
+    @doc(tags=['ingredient'], description='Read dish ingredients.')
     def get(self, dish_id):
         dish = Dish.query.filter(Dish.id == dish_id).first_or_404()
         ingredients = {}
@@ -302,13 +302,13 @@ class IngredientList(MethodResource, Resource):
 
 
 class IngredientDetail(MethodResource, Resource):
-    @doc(description='Read dish ingredient.')
+    @doc(tags=['ingredient'], description='Read dish ingredient.')
     def get(self, dish_id, id):
         ri = Ingredient.query.filter(Ingredient.id == id,
                                            Ingredient.dish_id == dish_id).first_or_404()
         return ri.as_json(), 200
 
-    @doc(description='Update dish ingredient.')
+    @doc(tags=['ingredient'], description='Update dish ingredient.')
     @use_kwargs(IngredientRequestSchema(), location=('json'))
     def put(self, dish_id, id, **kwargs):
 
@@ -385,7 +385,7 @@ class IngredientDetail(MethodResource, Resource):
 
         return ingredient.as_json(), 201
 
-    @doc(description='Delete dish ingredient.')
+    @doc(tags=['ingredient'], description='Delete dish ingredient.')
     def delete(self, dish_id, id):
         ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
         if ingredient.dish_id != dish_id:
@@ -406,7 +406,7 @@ class IngredientDetail(MethodResource, Resource):
 
 
 class DishImg(MethodResource, Resource):
-    @doc(description='Read dish img.')
+    @doc(tags=['dish'], description='Read dish img.')
     def get(self, id):
         response = send_from_directory(directory='images/', filename='{}.jpg'.format(id))
         return response

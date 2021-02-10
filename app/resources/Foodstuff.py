@@ -42,7 +42,7 @@ class FoodstuffRequestSchema(Schema):
         return validation_errors
 
 class FoodstuffList(MethodResource, Resource):
-    @doc(description='Read all Foodstuffs.')
+    @doc(tags=['foodstuff'], description='Read all Foodstuffs.')
     def get(self):
         r = Foodstuff.query.order_by(Foodstuff.id.desc()).all()
         results = {}
@@ -56,7 +56,7 @@ class FoodstuffList(MethodResource, Resource):
 
         return results, 200
 
-    @doc(description='Create foodstuff.')
+    @doc(tags=['foodstuff'], description='Create foodstuff.')
     @use_kwargs(FoodstuffRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = FoodstuffRequestSchema().validate(kwargs)
@@ -80,12 +80,12 @@ class FoodstuffList(MethodResource, Resource):
 
 
 class FoodstuffDetail(MethodResource, Resource):
-    @doc(description='Read foodstuff.')
+    @doc(tags=['foodstuff'], description='Read foodstuff.')
     def get(self, id):
         r = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
         return r.as_json(), 200
 
-    @doc(description='Update foodstuff.')
+    @doc(tags=['foodstuff'], description='Update foodstuff.')
     @use_kwargs(FoodstuffRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = FoodstuffRequestSchema().validate(kwargs)
@@ -106,7 +106,7 @@ class FoodstuffDetail(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-    @doc(description='Delete foodstuff.')
+    @doc(tags=['foodstuff'], description='Delete foodstuff.')
     def delete(self, id):
         r = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
 
@@ -151,13 +151,13 @@ class StoreSectionRequestSchema(Schema):
         return validation_errors
 
 class StoreSectionList(MethodResource, Resource):
-    @doc(description='Read store sections.')
+    @doc(tags=['dictionary'], description='Read store sections.')
     def get(self):
         r = DStoreSection.query.order_by(DStoreSection.id.desc()).all()
         results = [ob.as_json() for ob in r]
         return results, 200
 
-    @doc(description='Create store section.')
+    @doc(tags=['dictionary'], description='Create store section.')
     @use_kwargs(StoreSectionRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = StoreSectionRequestSchema().validate(kwargs)
@@ -174,12 +174,12 @@ class StoreSectionList(MethodResource, Resource):
 
 
 class StoreSectionDetail(MethodResource, Resource):
-    @doc(description='Read store section.')
+    @doc(tags=['dictionary'], description='Read store section.')
     def get(self, id):
         r = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
         return r.as_json(), 200
 
-    @doc(description='Update store section.')
+    @doc(tags=['dictionary'], description='Update store section.')
     @use_kwargs(StoreSectionRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = StoreSectionRequestSchema().validate(kwargs)
@@ -199,7 +199,7 @@ class StoreSectionDetail(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-    @doc(description='Delete store section.')
+    @doc(tags=['dictionary'], description='Delete store section.')
     def delete(self, id):
         r = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
 
