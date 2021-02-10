@@ -44,7 +44,7 @@ class DStoreSection(db.Model):
 
 
 class DUnit(db.Model):
-    __tablename__ = 'd_units'
+    __tablename__ = 'd_unit'
 
     name = db.Column(db.Text)
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
@@ -122,7 +122,7 @@ class Ingredient(db.Model):
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     recipe_id = db.Column(db.ForeignKey('recipes.id'))
     foodstuff_id = db.Column(db.ForeignKey('foodstuff.id'))
-    unit_id = db.Column(db.ForeignKey('d_units.id'))
+    unit_id = db.Column(db.ForeignKey('d_unit.id'))
     amount = db.Column(db.Float(53))
     pre_pack_type_id = db.Column(db.ForeignKey('d_pre_pack_type.id'))
     stage_id = db.Column(db.ForeignKey('d_stage.id'))
