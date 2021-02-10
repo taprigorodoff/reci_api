@@ -75,7 +75,7 @@ class Foodstuff(db.Model):
 t_recipe_categories = db.Table(
     'recipe_categories',
     db.Column('category_id', db.ForeignKey('d_category.id')),
-    db.Column('recipe_id', db.ForeignKey('recipes.id'))
+    db.Column('recipe_id', db.ForeignKey('recipe.id'))
 )
 
 t_ingredient_alternatives = db.Table(
@@ -89,7 +89,7 @@ class MenuDish(db.Model):
     __tablename__ = 'menu_dishes'
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     menu_id = db.Column(db.ForeignKey('menu.id'))
-    recipe_id = db.Column(db.ForeignKey('recipes.id'))
+    recipe_id = db.Column(db.ForeignKey('recipe.id'))
     menu = db.relationship('Menu', primaryjoin='MenuDish.menu_id == Menu.id', backref='menu_dishes')
     recipe = db.relationship('Recipe', primaryjoin='MenuDish.recipe_id == Recipe.id')
     portion = db.Column(db.Integer, server_default=db.FetchedValue())
@@ -120,7 +120,7 @@ class Ingredient(db.Model):
     __tablename__ = 'ingredient'
 
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
-    recipe_id = db.Column(db.ForeignKey('recipes.id'))
+    recipe_id = db.Column(db.ForeignKey('recipe.id'))
     foodstuff_id = db.Column(db.ForeignKey('foodstuff.id'))
     unit_id = db.Column(db.ForeignKey('d_unit.id'))
     amount = db.Column(db.Float(53))
@@ -162,7 +162,7 @@ class Ingredient(db.Model):
 
 
 class Recipe(db.Model):
-    __tablename__ = 'recipes'
+    __tablename__ = 'recipe'
 
     name = db.Column(db.Text)
     description = db.Column(db.Text)
