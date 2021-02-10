@@ -124,7 +124,7 @@ class Ingredient(db.Model):
     foodstuff_id = db.Column(db.ForeignKey('foodstuff.id'))
     unit_id = db.Column(db.ForeignKey('d_units.id'))
     amount = db.Column(db.Float(53))
-    prepack_type_id = db.Column(db.ForeignKey('d_prepack_types.id'))
+    pre_pack_type_id = db.Column(db.ForeignKey('d_prepack_types.id'))
     stage_id = db.Column(db.ForeignKey('d_stages.id'))
 
     recipe = db.relationship('Recipe', primaryjoin='Ingredient.recipe_id == Recipe.id',
@@ -132,7 +132,7 @@ class Ingredient(db.Model):
     foodstuff = db.relationship('Foodstuff', primaryjoin='Ingredient.foodstuff_id == Foodstuff.id')
     ingredient_alternatives = db.relationship('Foodstuff', secondary=t_ingredient_alternatives, passive_deletes=True)
 
-    prepack_type = db.relationship('DPrepackType', primaryjoin='Ingredient.prepack_type_id == DPrepackType.id')
+    prepack_type = db.relationship('DPrepackType', primaryjoin='Ingredient.pre_pack_type_id == DPrepackType.id')
     stage = db.relationship('DStage', primaryjoin='Ingredient.stage_id == DStage.id')
     unit = db.relationship('DUnit', primaryjoin='Ingredient.unit_id == DUnit.id')
 

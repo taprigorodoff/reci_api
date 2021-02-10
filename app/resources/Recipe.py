@@ -150,7 +150,7 @@ class IngredientRequestSchema(Schema):
     foodstuff_id = fields.Integer(required=True, description="API type of awesome API")
     amount = fields.Float(required=True, description="API type of awesome API")
     unit_id = fields.Integer(required=True, description="API type of awesome API")
-    prepack_type_id = fields.Integer(required=False, description="API type of awesome API") #nullable=True,
+    pre_pack_type_id = fields.Integer(required=False, description="API type of awesome API") #nullable=True,
     stage_id = fields.Integer(required=False, description="API type of awesome API") #nullable=True,
     alternative_ids = fields.List(cls_or_instance=fields.Integer(),
                              required=False,
@@ -168,7 +168,7 @@ class IngredientRequestSchema(Schema):
     ) -> typing.Dict[str, typing.List[str]]:
 
         unit_ids = [cat.id for cat in db.session.query(DUnit.id).all()]  # todo кэш
-        prepack_type_ids = [cat.id for cat in db.session.query(DPrepackType.id).all()]  # todo кэш
+        pre_pack_type_ids = [cat.id for cat in db.session.query(DPrepackType.id).all()]  # todo кэш
         stage_ids = [cat.id for cat in db.session.query(DStage.id).all()]  # todo кэш
 
         # todo посмотреть (в джанго?) куда убрать влидацию
@@ -182,11 +182,11 @@ class IngredientRequestSchema(Schema):
                 }
             )
 
-        if 'prepack_type_id' in data.keys() and data['prepack_type_id'] not in prepack_type_ids:
+        if 'pre_pack_type_id' in data.keys() and data['pre_pack_type_id'] not in pre_pack_type_ids:
             validation_errors.update(
                 {
-                    'prepack_type_id': [
-                        'Bad choice for prepack_type_id'
+                    'pre_pack_type_id': [
+                        'Bad choice for pre_pack_type_id'
                     ]
                 }
             )
@@ -264,8 +264,8 @@ class IngredientList(MethodResource, Resource):
         ri.foodstuff_id = kwargs['foodstuff_id']
         ri.amount = kwargs['amount']
         ri.unit_id = kwargs['unit_id']
-        if 'prepack_type_id' in kwargs.keys():
-            ri.prepack_type_id = kwargs['prepack_type_id']
+        if 'pre_pack_type_id' in kwargs.keys():
+            ri.pre_pack_type_id = kwargs['pre_pack_type_id']
         if 'stage_id' in kwargs.keys():
             ri.stage_id = kwargs['stage_id']
 
@@ -356,10 +356,10 @@ class IngredientDetail(MethodResource, Resource):
         ingredient.foodstuff_id = kwargs['foodstuff_id']
         ingredient.amount = kwargs['amount']
         ingredient.unit_id = kwargs['unit_id']
-        if 'prepack_type_id' in kwargs.keys():
-            ingredient.prepack_type_id = kwargs['prepack_type_id']
+        if 'pre_pack_type_id' in kwargs.keys():
+            ingredient.pre_pack_type_id = kwargs['pre_pack_type_id']
         else:
-            ingredient.prepack_type_id = None
+            ingredient.pre_pack_type_id = None
         if 'stage_id' in kwargs.keys():
             ingredient.stage_id = kwargs['stage_id']
         else:
