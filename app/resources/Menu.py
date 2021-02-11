@@ -1,20 +1,16 @@
 from flask_restful import Resource, abort
 from sqlalchemy import exc
-from resources.models import Dish
-from resources.models import Menu, MenuDish
+from models.db import Dish
+from models.db import Menu, MenuDish
+
+from resources.schema.menu.request import MenuRequestSchema
+
 from app import db
 
 from flask_apispec.views import MethodResource
 from flask_apispec import doc, use_kwargs
-from marshmallow import Schema, fields, ValidationError, validate, types
+from marshmallow import Schema, fields, ValidationError, types
 import typing
-
-
-class MenuRequestSchema(Schema):
-    name = fields.String(required=True, description="API type of awesome API", validate=validate.Length(max=100))
-
-    def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
-        abort(400, message=error.messages)
 
 
 class MenuList(MethodResource, Resource):
@@ -161,6 +157,7 @@ class MenuDishList(MethodResource, Resource):
                    }, 503
 
         return menu_dish.as_json(), 200
+
 
 class MenuDishDetail(MethodResource, Resource):
     @doc(tags=['menu'], description='Read menu dish.')

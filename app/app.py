@@ -3,8 +3,6 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from config import Configuration
 
-from apispec import APISpec
-from apispec.ext.marshmallow import MarshmallowPlugin
 from flask_apispec.extension import FlaskApiSpec
 
 app = Flask(__name__)
@@ -12,22 +10,12 @@ api = Api(app)
 db = SQLAlchemy(app)
 app.config.from_object(Configuration)
 
-app.config.update({
-    'APISPEC_SPEC': APISpec(
-        title='Awesome Project',
-        version='v1',
-        plugins=[MarshmallowPlugin()],
-        openapi_version='2.0.0'
-    ),
-    'APISPEC_SWAGGER_URL': '/swagger/',  # URI to access API Doc JSON
-    'APISPEC_SWAGGER_UI_URL': '/swagger-ui/'  # URI to access UI of API Doc
-})
 docs = FlaskApiSpec(app)
 
 from resources.Dish import DishList, DishDetail, DishImg
-from resources.Dish import IngredientList, IngredientDetail
+from resources.Ingredient import IngredientList, IngredientDetail
 from resources.Foodstuff import FoodstuffList, FoodstuffDetail
-from resources.Foodstuff import StoreSectionList, StoreSectionDetail
+from resources.Dictionary import StoreSectionList, StoreSectionDetail
 from resources.Menu import MenuList, MenuDetail
 from resources.Menu import MenuDishList, MenuDishDetail
 from resources.Menu import MenuShoppingList
