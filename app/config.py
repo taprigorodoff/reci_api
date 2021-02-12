@@ -4,10 +4,11 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 
 class Configuration(object):
     DEBUG = True
+    ENV = 'development'
+
     SQLALCHEMY_DATABASE_URI = 'postgresql://cherelady:000@localhost/cherelady'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    ENV = 'development'
-    confirm_deleted_rows = False
+    CONFIRM_DELETED_ROWS = False
 
     APISPEC_SPEC: APISpec(
         title='Awesome Project',
@@ -17,3 +18,6 @@ class Configuration(object):
     )
     APISPEC_SWAGGER_URL = '/swagger/'  # URI to access API Doc JSON
     APISPEC_SWAGGER_UI_URL = '/swagger-ui/'  # URI to access UI of API Doc
+
+    CACHE_TYPE = 'redis'
+    CACHE_REDIS_URL = 'redis://localhost:6379/0'
