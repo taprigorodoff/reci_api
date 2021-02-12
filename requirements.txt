@@ -1,0 +1,7 @@
+flask
+flask_restful
+flask_sqlalchemy
+flask_caching
+psycopg2-binary
+apispec_flask_restful
+config
