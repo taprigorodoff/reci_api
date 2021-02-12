@@ -3,12 +3,14 @@ from sqlalchemy import exc
 from models.db import Foodstuff, DStoreSection, Ingredient
 from resources.schema.dictionary.store_section.request import StoreSectionRequestSchema
 from app import db
+from app import cache
 
 from flask_apispec.views import MethodResource
 from flask_apispec import doc, use_kwargs
 
 
 class StoreSectionList(MethodResource, Resource):
+    @cache.cached()
     @doc(tags=['dictionary'], description='Read store sections.')
     def get(self):
         r = DStoreSection.query.order_by(DStoreSection.id.desc()).all()
@@ -28,10 +30,12 @@ class StoreSectionList(MethodResource, Resource):
         section.name = kwargs['name']
         db.session.add(section)
         db.session.commit()
+        cache.clear()
         return section.as_json(), 201
 
 
 class StoreSectionDetail(MethodResource, Resource):
+    @cache.cached()
     @doc(tags=['dictionary'], description='Read store section.')
     def get(self, id):
         r = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
@@ -51,6 +55,7 @@ class StoreSectionDetail(MethodResource, Resource):
         try:
             db.session.add(section)
             db.session.commit()
+            cache.clear()
             return section.as_json(), 200
         except exc.SQLAlchemyError as e:
             return {
@@ -71,6 +76,7 @@ class StoreSectionDetail(MethodResource, Resource):
             db.session.add(r)
             db.session.delete(r)
             db.session.commit()
+            cache.clear()
             return '', 204
         except exc.SQLAlchemyError as e:
             return {

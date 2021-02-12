@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_caching import Cache
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from config import Configuration
@@ -7,9 +8,10 @@ from flask_apispec.extension import FlaskApiSpec
 
 app = Flask(__name__)
 api = Api(app)
-db = SQLAlchemy(app)
 app.config.from_object(Configuration)
 
+db = SQLAlchemy(app)
+cache = Cache(app)
 docs = FlaskApiSpec(app)
 
 from resources.Dish import DishList, DishDetail, DishImg
