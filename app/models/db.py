@@ -49,6 +49,12 @@ class DUnit(db.Model):
     name = db.Column(db.Text)
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
 
+    def as_json(self):
+        return {
+            'id': self.id,
+            'name': self.name
+        }
+
 
 class Foodstuff(db.Model):
     __tablename__ = 'foodstuff'
