@@ -29,6 +29,12 @@ class DStage(db.Model):
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     name = db.Column(db.Text)
 
+    def as_json(self):
+        return {
+            'id': self.id,
+            'name': self.name
+        }
+
 
 class DStoreSection(db.Model):
     __tablename__ = 'd_store_section'
