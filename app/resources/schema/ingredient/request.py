@@ -38,7 +38,12 @@ class IngredientRequestSchema(Schema):
         else:
             unit_ids = [unit.id for unit in db.session.query(DUnit.id).all()]
 
-        pre_pack_type_ids = [cat.id for cat in db.session.query(DPrePackType.id).all()]  # todo кэш
+        cached_pre_pack_type = cache.get('view//pre_pack_type')
+        if cached_pre_pack_type:
+            raw = json.loads(cached_pre_pack_type.response[0])
+            pre_pack_type_ids = [stage['id'] for stage in raw]
+        else:
+            pre_pack_type_ids = [pre_pack_type.id for pre_pack_type in db.session.query(DPrePackType.id).all()]
 
         cached_stage = cache.get('view//stage')
         if cached_stage:
