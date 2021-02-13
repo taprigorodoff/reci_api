@@ -2,10 +2,11 @@ from flask_restful import abort
 
 from models.db import Dish, Ingredient, Foodstuff
 from models.db import DCategory, DStage, DUnit, DPrePackType
-from app import db
+from app import db, cache
 
 from marshmallow import Schema, fields, ValidationError, validate, types
 import typing
+import json
 
 
 class DishRequestSchema(Schema):
@@ -28,10 +29,17 @@ class DishRequestSchema(Schema):
         many: typing.Optional[bool] = None,
         partial: typing.Optional[typing.Union[bool, types.StrSequenceOrSet]] = None
     ) -> typing.Dict[str, typing.List[str]]:
-        categories_ids = [cat.id for cat in db.session.query(DCategory.id).all()]  # todo кэш
+
+        cached_category = cache.get('view//category')
+        if cached_category:
+            raw = json.loads(cached_category.response[0])
+            category_ids = [unit['id'] for unit in raw]
+        else:
+            category_ids = [category.id for category in db.session.query(DCategory.id).all()]
+
         validation_errors = {}
         for category_id in data['categories']:
-            if category_id not in categories_ids:
+            if category_id not in category_ids:
                 validation_errors.update(
                     {
                         'categories': [
