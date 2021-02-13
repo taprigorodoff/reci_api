@@ -1,11 +1,12 @@
 from flask_restful import Resource
 from sqlalchemy import exc
-from models.db import DStoreSection, DUnit, DStage, DCategory
+from models.db import DStoreSection, DUnit, DStage, DCategory, DPrePackType
 from models.db import Foodstuff, Ingredient, Dish
 from resources.schema.dictionary.store_section.request import StoreSectionRequestSchema
 from resources.schema.dictionary.unit.request import UnitRequestSchema
 from resources.schema.dictionary.stage.request import StageRequestSchema
 from resources.schema.dictionary.category.request import CategoryRequestSchema
+from resources.schema.dictionary.pre_pack_type.request import PrePackTypeRequestSchema
 from app import db
 from app import cache
 
@@ -331,6 +332,90 @@ class CategoryDetail(MethodResource, Resource):
         try:
             db.session.add(category)
             db.session.delete(category)
+            db.session.commit()
+            cache.clear()
+            return '', 204
+        except exc.SQLAlchemyError as e:
+            return {
+                       'messages': e.args
+                   }, 503
+
+
+class PrePackTypeList(MethodResource, Resource):
+    @cache.cached()
+    @doc(tags=['dictionary'], description='Read pre pack types.')
+    def get(self):
+        r = DPrePackType.query.order_by(DPrePackType.id.desc()).all()
+        results = [ob.as_json() for ob in r]
+        return results, 200
+
+    @doc(tags=['dictionary'], description='Create pre pack type.')
+    @use_kwargs(PrePackTypeRequestSchema(), location=('json'))
+    def post(self, **kwargs):
+        validation_errors = PrePackTypeRequestSchema().validate(kwargs)
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
+
+        pre_pack_type = DPrePackType()
+        pre_pack_type.name = kwargs['name']
+
+        try:
+            db.session.add(pre_pack_type)
+            db.session.commit()
+            cache.clear()
+        except exc.SQLAlchemyError as e:
+            db.session.rollback()
+            return {
+                       'messages': e.args
+                   }, 503
+
+        return pre_pack_type.as_json(), 201
+
+
+class PrePackTypeDetail(MethodResource, Resource):
+    @cache.cached()
+    @doc(tags=['dictionary'], description='Read pre pack type.')
+    def get(self, id):
+        r = DPrePackType.query.filter(DPrePackType.id == id).first_or_404()
+        return r.as_json(), 200
+
+    @doc(tags=['dictionary'], description='Update pre pack type.')
+    @use_kwargs(PrePackTypeRequestSchema(), location=('json'))
+    def put(self, id, **kwargs):
+        validation_errors = PrePackTypeRequestSchema().validate(kwargs)
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
+
+        pre_pack_type = DPrePackType.query.filter(DPrePackType.id == id).first_or_404()
+        pre_pack_type.name = kwargs['name']
+
+        try:
+            db.session.add(pre_pack_type)
+            db.session.commit()
+            cache.clear()
+            return pre_pack_type.as_json(), 200
+        except exc.SQLAlchemyError as e:
+            return {
+                       'messages': e.args
+                   }, 503
+
+    @doc(tags=['dictionary'], description='Delete pre pack type.')
+    def delete(self, id):
+        pre_pack_type = DPrePackType.query.filter(DPrePackType.id == id).first_or_404()
+
+        ingredients = Ingredient.query.filter(Ingredient.pre_pack_type_id == id).all()
+        if ingredients:
+            return {
+                       "message": "pre pack type already use"
+                   }, 422
+
+        try:
+            db.session.add(pre_pack_type)
+            db.session.delete(pre_pack_type)
             db.session.commit()
             cache.clear()
             return '', 204

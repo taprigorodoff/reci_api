@@ -23,7 +23,10 @@ class DPrePackType(db.Model):
     name = db.Column(db.Text)
 
     def as_json(self):
-        return self.name
+        return {
+            'id': self.id,
+            'name': self.name
+        }
 
 
 class DStage(db.Model):
