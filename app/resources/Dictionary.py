@@ -1,10 +1,11 @@
 from flask_restful import Resource
 from sqlalchemy import exc
-from models.db import DStoreSection, DUnit, DStage
-from models.db import Foodstuff, Ingredient
+from models.db import DStoreSection, DUnit, DStage, DCategory
+from models.db import Foodstuff, Ingredient, Dish
 from resources.schema.dictionary.store_section.request import StoreSectionRequestSchema
 from resources.schema.dictionary.unit.request import UnitRequestSchema
 from resources.schema.dictionary.stage.request import StageRequestSchema
+from resources.schema.dictionary.category.request import CategoryRequestSchema
 from app import db
 from app import cache
 
@@ -246,6 +247,90 @@ class StageDetail(MethodResource, Resource):
         try:
             db.session.add(r)
             db.session.delete(r)
+            db.session.commit()
+            cache.clear()
+            return '', 204
+        except exc.SQLAlchemyError as e:
+            return {
+                       'messages': e.args
+                   }, 503
+
+
+class CategoryList(MethodResource, Resource):
+    @cache.cached()
+    @doc(tags=['dictionary'], description='Read categories.')
+    def get(self):
+        r = DCategory.query.order_by(DCategory.id.desc()).all()
+        results = [ob.as_json() for ob in r]
+        return results, 200
+
+    @doc(tags=['dictionary'], description='Create category.')
+    @use_kwargs(CategoryRequestSchema(), location=('json'))
+    def post(self, **kwargs):
+        validation_errors = CategoryRequestSchema().validate(kwargs)
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
+
+        category = DCategory()
+        category.name = kwargs['name']
+
+        try:
+            db.session.add(category)
+            db.session.commit()
+            cache.clear()
+        except exc.SQLAlchemyError as e:
+            db.session.rollback()
+            return {
+                       'messages': e.args
+                   }, 503
+
+        return category.as_json(), 201
+
+
+class CategoryDetail(MethodResource, Resource):
+    @cache.cached()
+    @doc(tags=['dictionary'], description='Read category.')
+    def get(self, id):
+        r = DCategory.query.filter(DCategory.id == id).first_or_404()
+        return r.as_json(), 200
+
+    @doc(tags=['dictionary'], description='Update category.')
+    @use_kwargs(CategoryRequestSchema(), location=('json'))
+    def put(self, id, **kwargs):
+        validation_errors = CategoryRequestSchema().validate(kwargs)
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
+
+        category = DCategory.query.filter(DCategory.id == id).first_or_404()
+        category.name = kwargs['name']
+
+        try:
+            db.session.add(category)
+            db.session.commit()
+            cache.clear()
+            return category.as_json(), 200
+        except exc.SQLAlchemyError as e:
+            return {
+                       'messages': e.args
+                   }, 503
+
+    @doc(tags=['dictionary'], description='Delete category.')
+    def delete(self, id):
+        category = DCategory.query.filter(DCategory.id == id).first_or_404()
+
+        dishes = Dish.query.filter(Dish.categories.contains(category)).all()  # todo
+        if dishes:
+            return {
+                       "message": "category already use"
+                   }, 422
+
+        try:
+            db.session.add(category)
+            db.session.delete(category)
             db.session.commit()
             cache.clear()
             return '', 204

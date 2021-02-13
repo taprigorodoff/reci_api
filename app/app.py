@@ -17,7 +17,10 @@ docs = FlaskApiSpec(app)
 from resources.Dish import DishList, DishDetail, DishImg
 from resources.Ingredient import IngredientList, IngredientDetail
 from resources.Foodstuff import FoodstuffList, FoodstuffDetail
-from resources.Dictionary import StoreSectionList, StoreSectionDetail, UnitList, UnitDetail, StageList, StageDetail
+from resources.Dictionary import StoreSectionList, StoreSectionDetail, \
+                                 UnitList, UnitDetail, \
+                                 StageList, StageDetail,\
+                                 CategoryList, CategoryDetail
 from resources.Menu import MenuList, MenuDetail
 from resources.Menu import MenuDishList, MenuDishDetail
 from resources.Menu import MenuShoppingList
@@ -37,6 +40,8 @@ api.add_resource(UnitList, '/unit')
 api.add_resource(UnitDetail, '/unit/<id>')
 api.add_resource(StageList, '/stage')
 api.add_resource(StageDetail, '/stage/<id>')
+api.add_resource(CategoryList, '/category')
+api.add_resource(CategoryDetail, '/category/<id>')
 
 api.add_resource(MenuList, '/menu')
 api.add_resource(MenuDetail, '/menu/<id>')
@@ -61,6 +66,8 @@ docs.register(UnitList)
 docs.register(UnitDetail)
 docs.register(StageList)
 docs.register(StageDetail)
+docs.register(CategoryList)
+docs.register(CategoryDetail)
 
 docs.register(MenuList)
 docs.register(MenuDetail)

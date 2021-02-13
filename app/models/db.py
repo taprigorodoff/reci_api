@@ -10,7 +10,10 @@ class DCategory(db.Model):
     dishes = db.relationship('Dish', secondary='dish_categories', backref='d_category')
 
     def as_json(self):
-        return self.name
+        return {
+            'id': self.id,
+            'name': self.name
+        }
 
 
 class DPrePackType(db.Model):
