@@ -2,10 +2,12 @@ from flask_restful import abort
 
 from models.db import Dish, Ingredient, Foodstuff
 from models.db import DCategory, DStage, DUnit, DPrePackType
-from app import db
+from app import db, cache
 
 from marshmallow import Schema, fields, ValidationError, validate, types
+
 import typing
+import json
 
 
 class IngredientRequestSchema(Schema):
@@ -29,7 +31,13 @@ class IngredientRequestSchema(Schema):
         partial: typing.Optional[typing.Union[bool, types.StrSequenceOrSet]] = None
     ) -> typing.Dict[str, typing.List[str]]:
 
-        unit_ids = [cat.id for cat in db.session.query(DUnit.id).all()]  # todo кэш
+        cached_unit = cache.get('view//unit')
+        if cached_unit:
+            raw = json.loads(cached_unit.response[0])
+            unit_ids = [unit['id'] for unit in raw]
+        else:
+            unit_ids = [cat.id for cat in db.session.query(DUnit.id).all()]
+
         pre_pack_type_ids = [cat.id for cat in db.session.query(DPrePackType.id).all()]  # todo кэш
         stage_ids = [cat.id for cat in db.session.query(DStage.id).all()]  # todo кэш
 
