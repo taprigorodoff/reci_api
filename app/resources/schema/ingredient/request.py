@@ -36,12 +36,17 @@ class IngredientRequestSchema(Schema):
             raw = json.loads(cached_unit.response[0])
             unit_ids = [unit['id'] for unit in raw]
         else:
-            unit_ids = [cat.id for cat in db.session.query(DUnit.id).all()]
+            unit_ids = [unit.id for unit in db.session.query(DUnit.id).all()]
 
         pre_pack_type_ids = [cat.id for cat in db.session.query(DPrePackType.id).all()]  # todo кэш
-        stage_ids = [cat.id for cat in db.session.query(DStage.id).all()]  # todo кэш
 
-        # todo посмотреть (в джанго?) куда убрать влидацию
+        cached_stage = cache.get('view//stage')
+        if cached_stage:
+            raw = json.loads(cached_stage.response[0])
+            stage_ids = [stage['id'] for stage in raw]
+        else:
+            stage_ids = [stage.id for stage in db.session.query(DStage.id).all()]
+
         validation_errors = {}
         if data['unit_id'] not in unit_ids:
             validation_errors.update(
