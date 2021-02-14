@@ -18,18 +18,27 @@ class DishList(MethodResource, Resource):
         '''
         Get method represents a GET API method
         '''
-        r = Dish.query.order_by(Dish.id.desc()).all()
-        results = [ob.as_json() for ob in r]
+        dishes = Dish.query.order_by(Dish.id.desc()).all()
+        results = [ob.as_json() for ob in dishes]
         return results, 200
 
     @doc(tags=['dish'], description='Create dish.')
     @use_kwargs(DishRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = DishRequestSchema().validate(kwargs)
+        if Dish.query.filter(Dish.name == kwargs["name"]).first():
+            validation_errors.update(
+                {
+                    'name': [
+                        'Already exist'
+                    ]
+                }
+            )
         if validation_errors:
             return {
                        'messages': validation_errors
                    }, 400
+
         dish = Dish()
         dish.name = kwargs['name']
         dish.description = kwargs['description']
@@ -67,16 +76,18 @@ class DishDetail(MethodResource, Resource):
             return {
                        'messages': validation_errors
                    }, 400
+
         dish = Dish.query.filter(Dish.id == id).first_or_404()
         dish.name = kwargs['name']
         dish.description = kwargs['description']
         dish.portion = kwargs['portion']
         dish.cook_time = kwargs['cook_time']
         dish.all_time = kwargs['all_time']
+
+        new_category_list = []
         for category_id in kwargs['categories']:
-            category = DCategory.query.get(category_id)
-            if category:
-                dish.categories.append(category)
+            new_category_list.append(DCategory.query.get(category_id))
+        dish.categories = new_category_list
 
         try:
             db.session.add(dish)
@@ -91,10 +102,10 @@ class DishDetail(MethodResource, Resource):
 
     @doc(tags=['dish'], description='Delete dish.')
     def delete(self, id):
-        r = Dish.query.filter(Dish.id == id).first_or_404()
-        db.session.add(r)
-        db.session.delete(r)
+        dish = Dish.query.filter(Dish.id == id).first_or_404()
         try:
+            db.session.add(dish)
+            db.session.delete(dish)
             db.session.commit()
         except exc.SQLAlchemyError as e:
             db.session.rollback()

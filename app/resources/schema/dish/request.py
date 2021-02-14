@@ -47,12 +47,5 @@ class DishRequestSchema(Schema):
                         ]
                     }
                 )
-        if Dish.query.filter(Dish.name == data["name"]).first():
-            validation_errors.update(
-                {
-                    'name': [
-                        'Already exist'
-                    ]
-                }
-            )
+
         return validation_errors
