@@ -5,6 +5,7 @@ from flask import send_from_directory
 from models.db import Dish, Ingredient, Foodstuff
 from models.db import DCategory, DStage, DUnit, DPrePackType
 from resources.schema.dish.request import DishRequestSchema
+from resources.schema.dish.filter import DishFilterSchema
 
 from app import db
 
@@ -14,11 +15,41 @@ from flask_apispec import doc, use_kwargs
 
 class DishList(MethodResource, Resource):
     @doc(tags=['dish'], description='Read all dishes.')
-    def get(self):
+    @use_kwargs(DishFilterSchema(), location=('query'))
+    def get(self, **kwargs):
         '''
         Get method represents a GET API method
         '''
-        dishes = Dish.query.order_by(Dish.id.desc()).all()
+        validation_errors = DishFilterSchema().validate(kwargs)
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
+
+        if kwargs:
+            conditions = []
+            if 'cook_time' in kwargs.keys():
+                conditions.append('cook_time <= {}'.format(kwargs['cook_time']))
+            if 'all_time' in kwargs.keys():
+                conditions.append('all_time <= {}'.format(kwargs['all_time']))
+            if 'category_id' in kwargs.keys():
+                conditions.append('category_id = {}'.format(kwargs['category_id']))
+            if 'foodstuff_ids' in kwargs.keys():
+                conditions.append('foodstuff_id in ({})'.format(','.join(str(f) for f in kwargs['foodstuff_ids'])))
+
+            condition = ' AND '.join(str(c) for c in conditions)
+            query = """SELECT DISTINCT dish.id 
+                       FROM dish
+                       JOIN dish_categories dc ON dc.dish_id = dish.id
+                       JOIN ingredient i ON i.dish_id = dish.id
+                       WHERE """ + condition
+
+            result = db.engine.execute(query)
+
+            dish_ids = [row[0] for row in result]
+            dishes = Dish.query.filter(Dish.id.in_(dish_ids)).order_by(Dish.name.desc()).all()
+        else:
+            dishes = Dish.query.order_by(Dish.id.desc()).all()
         results = [ob.as_json() for ob in dishes]
         return results, 200
 
