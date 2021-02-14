@@ -2,28 +2,31 @@ from flask_restful import Resource, abort
 from sqlalchemy import exc
 from models.db import Foodstuff, DStoreSection, Ingredient
 from resources.schema.foodstuff.request import FoodstuffRequestSchema
+from resources.schema.foodstuff.filter import FoodstuffFilterSchema
 from app import db
 
 from flask_apispec.views import MethodResource
 from flask_apispec import doc, use_kwargs
-from marshmallow import Schema, fields, ValidationError, validate, types
-import typing
 
 
 class FoodstuffList(MethodResource, Resource):
     @doc(tags=['foodstuff'], description='Read all Foodstuffs.')
-    def get(self):
-        r = Foodstuff.query.order_by(Foodstuff.id.desc()).all()
-        results = {}
+    @use_kwargs(FoodstuffFilterSchema(), location=('query'))
+    def get(self, **kwargs):
 
-        for ob in r:
-            foodstuff = ob.as_json()
-            store_section = foodstuff.pop('store_section', 'other')['name']
-            tmp_foodstuffs = results.get(store_section, [])
-            tmp_foodstuffs.append(foodstuff)
-            results.update({store_section: tmp_foodstuffs})
+        validation_errors = FoodstuffFilterSchema().validate(kwargs)
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
 
-        return results, 200
+        if 'store_section_id' in kwargs.keys():
+            foodstuffs = Foodstuff.query.filter(Foodstuff.store_section_id == kwargs['store_section_id'])\
+                .order_by(Foodstuff.name.desc()).all()
+        else:
+            foodstuffs = Foodstuff.query.order_by(Foodstuff.store_section_id.desc()).all()
+
+        return [foodstuff.as_json() for foodstuff in foodstuffs], 200
 
     @doc(tags=['foodstuff'], description='Create foodstuff.')
     @use_kwargs(FoodstuffRequestSchema(), location=('json'))
