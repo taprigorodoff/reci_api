@@ -26,6 +26,9 @@ class DishList(MethodResource, Resource):
                        'messages': validation_errors
                    }, 400
 
+        page = kwargs.pop('page')
+        per_page = kwargs.pop('per_page')
+
         if kwargs:
             conditions = []
             if 'cook_time' in kwargs.keys():
@@ -47,11 +50,20 @@ class DishList(MethodResource, Resource):
             result = db.engine.execute(query)
 
             dish_ids = [row[0] for row in result]
-            dishes = Dish.query.filter(Dish.id.in_(dish_ids)).order_by(Dish.name.desc()).all()
+            dishes = Dish.query.filter(Dish.id.in_(dish_ids)).order_by(Dish.name.desc()).paginate(page, per_page, False)
         else:
-            dishes = Dish.query.order_by(Dish.id.desc()).all()
-        results = [ob.as_json() for ob in dishes]
-        return results, 200
+            dishes = Dish.query.order_by(Dish.name.desc()).paginate(page, per_page, False)
+
+        result = {
+            '_items': [ob.as_json() for ob in dishes.items],
+            '_meta': {
+                "total": dishes.total,
+                "page": dishes.page,
+                "pages": dishes.pages
+            }
+        }
+
+        return result, 200
 
     @doc(tags=['dish'], description='Create dish.')
     @use_kwargs(DishRequestSchema(), location=('json'))

@@ -1,7 +1,6 @@
 from flask_restful import abort
 
-from models.db import Dish, Ingredient, Foodstuff
-from models.db import DCategory, DStage, DUnit, DPrePackType
+from models.db import DCategory
 from app import db, cache
 
 from marshmallow import Schema, fields, ValidationError, validate, types
@@ -10,6 +9,8 @@ import json
 
 
 class DishFilterSchema(Schema):
+    page = fields.Integer(required=True, description="API type of awesome API")
+    per_page = fields.Integer(required=True, description="API type of awesome API") # todo >0
     cook_time = fields.Integer(required=False, description="API type of awesome API")
     all_time = fields.Integer(required=False, description="API type of awesome API")
     category_id = fields.Integer(required=False, description="API type of awesome API")
