@@ -9,8 +9,7 @@ import json
 
 
 class DishFilterSchema(Schema):
-    page = fields.Integer(required=True, description="API type of awesome API")
-    per_page = fields.Integer(required=True, description="API type of awesome API") # todo >0
+    page = fields.Integer(required=True, description="API type of awesome API", validate=validate.Range(min=1))
     cook_time = fields.Integer(required=False, description="API type of awesome API")
     all_time = fields.Integer(required=False, description="API type of awesome API")
     category_id = fields.Integer(required=False, description="API type of awesome API")

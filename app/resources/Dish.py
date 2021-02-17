@@ -28,7 +28,7 @@ class DishList(MethodResource, Resource):
                    }, 400
 
         page = kwargs.pop('page')
-        per_page = kwargs.pop('per_page')
+        per_page = 5
 
         if kwargs:
             conditions = []
