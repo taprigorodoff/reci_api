@@ -9,6 +9,9 @@ class DCategory(db.Model):
 
     dishes = db.relationship('Dish', secondary='dish_categories', backref='d_category')
 
+    def __str__(self):
+        return self.name
+
     def as_json(self):
         return {
             'id': self.id,
@@ -190,49 +193,3 @@ class Dish(db.Model):
     all_time = db.Column(db.Integer)
     categories = db.relationship('DCategory', secondary=t_dish_categories, passive_deletes=True,
                                  backref=db.backref('Dish', lazy='dynamic'))
-
-    def as_full_json(self):
-        ingredients = {}
-        pre_pack = {}
-
-        for ob in self.ingredients:
-            ingredient = ob.as_json()
-
-            stage_name = ingredient.pop('stage')
-            pre_pack_name = ingredient.pop('pre_pack', None)
-
-            tmp_ingredients = ingredients.get(stage_name, [])
-            tmp_ingredients.append(ingredient)
-            ingredients.update({stage_name: tmp_ingredients})
-
-            if pre_pack_name:
-                tmp_pre_pack = pre_pack.get(pre_pack_name, [])
-                tmp_pre_pack.append(ingredient)
-                pre_pack.update({pre_pack_name: tmp_pre_pack})
-
-        return {
-            'id': self.id,
-            'name': self.name,
-            'portion': self.portion,
-            'cook_time': self.cook_time,
-            'all_time': self.all_time,
-            'description': self.description,
-            'categories': [ob.as_json() for ob in self.categories],
-            'ingredients': ingredients,
-            'pre_pack': pre_pack,
-            'img': {
-                'url':
-                    '/dish/img/{}'.format(self.id)
-            }
-        }
-
-    def as_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'portion': self.portion,
-            'cook_time': self.cook_time,
-            'all_time': self.all_time,
-            'description': self.description,
-            'categories': [ob.as_json() for ob in self.categories]
-        }

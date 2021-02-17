@@ -21,3 +21,4 @@ class Configuration(object):
 
     CACHE_TYPE = 'redis'
     CACHE_REDIS_URL = 'redis://localhost:6379/0'
+    JSONIFY_MIMETYPE = 'application/hal+json'

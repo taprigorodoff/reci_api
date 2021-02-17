@@ -1,11 +1,12 @@
 from flask_restful import Resource
 from sqlalchemy import exc
-from flask import send_from_directory
+from flask import send_from_directory, request
 
 from models.db import Dish, Ingredient, Foodstuff
 from models.db import DCategory, DStage, DUnit, DPrePackType
 from resources.schema.dish.request import DishRequestSchema
 from resources.schema.dish.filter import DishFilterSchema
+from resources.schema.dish.response import DishesResponseSchema, DishResponseSchema
 
 from app import db
 
@@ -54,15 +55,32 @@ class DishList(MethodResource, Resource):
         else:
             dishes = Dish.query.order_by(Dish.name.desc()).paginate(page, per_page, False)
 
+        current_full_path = request.full_path
+        if page < dishes.pages:
+            next_page = current_full_path.replace('page={}'.format(page), 'page={}'.format(dishes.page + 1))
+        else:
+            next_page = None
+        last_page = current_full_path.replace('page={}'.format(page), 'page={}'.format(dishes.pages))
+
         result = {
-            '_items': [ob.as_json() for ob in dishes.items],
-            '_meta': {
-                "total": dishes.total,
-                "page": dishes.page,
-                "pages": dishes.pages
+            'data': DishesResponseSchema().dump(dishes.items),
+            'pagination': {
+                'total': dishes.total,
+                'page': dishes.page,
+                'pages': dishes.pages,
+            },
+            '_links': {
+                'self': {
+                    'href': current_full_path
+                },
+                'next': {
+                    'href': next_page
+                },
+                'last': {
+                    'href': last_page
+                }
             }
         }
-
         return result, 200
 
     @doc(tags=['dish'], description='Create dish.')
@@ -102,14 +120,14 @@ class DishList(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return dish.as_json(), 200
+        return DishResponseSchema().dump(dish), 201
 
 
 class DishDetail(MethodResource, Resource):
     @doc(tags=['dish'], description='Read dish.')
     def get(self, id):
         dish = Dish.query.filter(Dish.id == id).first_or_404()
-        return dish.as_full_json(), 200
+        return DishResponseSchema().dump(dish), 200
 
     @doc(tags=['dish'], description='Update dish.')
     @use_kwargs(DishRequestSchema(), location=('json'))
@@ -141,7 +159,7 @@ class DishDetail(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return dish.as_json(), 200
+        return DishResponseSchema().dump(dish), 200
 
     @doc(tags=['dish'], description='Delete dish.')
     def delete(self, id):

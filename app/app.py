@@ -2,6 +2,7 @@ from flask import Flask
 from flask_caching import Cache
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 from config import Configuration
 
 from flask_apispec.extension import FlaskApiSpec
@@ -11,6 +12,7 @@ api = Api(app)
 app.config.from_object(Configuration)
 
 db = SQLAlchemy(app)
+ma = Marshmallow(app)
 cache = Cache(app)
 docs = FlaskApiSpec(app)
 
@@ -28,7 +30,7 @@ from resources.Menu import MenuShoppingList
 
 api.add_resource(DishList, '/dishes')
 api.add_resource(DishDetail, '/dishes/<id>')
-api.add_resource(DishImg, '/dishes/<id>/img')
+api.add_resource(DishImg, '/dishes/<dish_id>/img')
 api.add_resource(IngredientList, '/dishes/<dish_id>/ingredients')
 api.add_resource(IngredientDetail, '/dishes/<dish_id>/ingredients/<id>')
 
