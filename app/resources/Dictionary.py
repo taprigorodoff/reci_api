@@ -3,6 +3,7 @@ from sqlalchemy import exc
 from models.db import DStoreSection, DUnit, DStage, DCategory, DPrePackType
 from models.db import Foodstuff, Ingredient, Dish
 from resources.schema.dictionary.store_section.request import StoreSectionRequestSchema
+from resources.schema.dictionary.store_section.response import StoreSectionResponseSchema
 from resources.schema.dictionary.unit.request import UnitRequestSchema
 from resources.schema.dictionary.stage.request import StageRequestSchema
 from resources.schema.dictionary.category.request import CategoryRequestSchema
@@ -18,9 +19,8 @@ class StoreSectionList(MethodResource, Resource):
     @cache.cached()
     @doc(tags=['dictionary'], description='Read store sections.')
     def get(self):
-        r = DStoreSection.query.order_by(DStoreSection.id.desc()).all()
-        results = [ob.as_json() for ob in r]
-        return results, 200
+        sections = DStoreSection.query.order_by(DStoreSection.id.desc()).all()
+        return StoreSectionResponseSchema(many=True).dump(sections), 200
 
     @doc(tags=['dictionary'], description='Create store section.')
     @use_kwargs(StoreSectionRequestSchema(), location=('json'))
@@ -36,15 +36,15 @@ class StoreSectionList(MethodResource, Resource):
         db.session.add(section)
         db.session.commit()
         cache.clear()
-        return section.as_json(), 201
+        return StoreSectionResponseSchema().dump(section), 201
 
 
 class StoreSectionDetail(MethodResource, Resource):
     @cache.cached()
     @doc(tags=['dictionary'], description='Read store section.')
     def get(self, id):
-        r = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
-        return r.as_json(), 200
+        section = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
+        return StoreSectionResponseSchema().dump(section), 200
 
     @doc(tags=['dictionary'], description='Update store section.')
     @use_kwargs(StoreSectionRequestSchema(), location=('json'))
@@ -61,7 +61,7 @@ class StoreSectionDetail(MethodResource, Resource):
             db.session.add(section)
             db.session.commit()
             cache.clear()
-            return section.as_json(), 200
+            return StoreSectionResponseSchema().dump(section), 200
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args

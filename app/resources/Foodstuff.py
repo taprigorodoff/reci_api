@@ -1,8 +1,10 @@
-from flask_restful import Resource, abort
+from flask import request
+from flask_restful import Resource
 from sqlalchemy import exc
 from models.db import Foodstuff, DStoreSection, Ingredient
 from resources.schema.foodstuff.request import FoodstuffRequestSchema
 from resources.schema.foodstuff.filter import FoodstuffFilterSchema
+from resources.schema.foodstuff.response import FoodstuffsResponseSchema, FoodstuffResponseSchema
 from app import db
 
 from flask_apispec.views import MethodResource
@@ -26,7 +28,16 @@ class FoodstuffList(MethodResource, Resource):
         else:
             foodstuffs = Foodstuff.query.order_by(Foodstuff.store_section_id.desc()).all()
 
-        return [foodstuff.as_json() for foodstuff in foodstuffs], 200
+        current_full_path = request.full_path
+        result = {
+            'data': FoodstuffsResponseSchema().dump(foodstuffs),
+            '_links': {
+                'self': {
+                    'href': current_full_path
+                }
+            }
+        }
+        return result, 200
 
     @doc(tags=['foodstuff'], description='Create foodstuff.')
     @use_kwargs(FoodstuffRequestSchema(), location=('json'))
@@ -44,7 +55,7 @@ class FoodstuffList(MethodResource, Resource):
         try:
             db.session.add(foodstuff)
             db.session.commit()
-            return foodstuff.as_json(), 201
+            return FoodstuffResponseSchema().dump(foodstuff), 201
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
@@ -54,8 +65,8 @@ class FoodstuffList(MethodResource, Resource):
 class FoodstuffDetail(MethodResource, Resource):
     @doc(tags=['foodstuff'], description='Read foodstuff.')
     def get(self, id):
-        r = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
-        return r.as_json(), 200
+        foodstuff = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
+        return FoodstuffResponseSchema().dump(foodstuff), 200
 
     @doc(tags=['foodstuff'], description='Update foodstuff.')
     @use_kwargs(FoodstuffRequestSchema(), location=('json'))
@@ -72,7 +83,7 @@ class FoodstuffDetail(MethodResource, Resource):
         try:
             db.session.add(foodstuff)
             db.session.commit()
-            return foodstuff.as_json(), 200
+            return FoodstuffResponseSchema().dump(foodstuff), 200
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args

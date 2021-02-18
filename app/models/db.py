@@ -51,11 +51,6 @@ class DStoreSection(db.Model):
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     name = db.Column(db.Text)
 
-    def as_json(self):
-        return {
-            'id': self.id,
-            'name': self.name
-        }
 
 
 class DUnit(db.Model):
@@ -80,17 +75,6 @@ class Foodstuff(db.Model):
 
     store_section = db.relationship('DStoreSection', primaryjoin='Foodstuff.store_section_id == DStoreSection.id',
                                     backref='foodstuff')
-
-    def as_json(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'store_section':
-                {
-                    'id': self.store_section.id,
-                    'name': self.store_section.name
-                }
-        }
 
 
 t_dish_categories = db.Table(
