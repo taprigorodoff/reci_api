@@ -1,13 +1,20 @@
 from flask_restful import Resource
 from sqlalchemy import exc
+
 from models.db import DStoreSection, DUnit, DStage, DCategory, DPrePackType
 from models.db import Foodstuff, Ingredient, Dish
+
 from resources.schema.dictionary.store_section.request import StoreSectionRequestSchema
 from resources.schema.dictionary.store_section.response import StoreSectionResponseSchema
 from resources.schema.dictionary.unit.request import UnitRequestSchema
+from resources.schema.dictionary.unit.response import UnitResponseSchema
 from resources.schema.dictionary.stage.request import StageRequestSchema
+from resources.schema.dictionary.stage.response import StageResponseSchema
 from resources.schema.dictionary.category.request import CategoryRequestSchema
+from resources.schema.dictionary.category.response import CategoryResponseSchema
 from resources.schema.dictionary.pre_pack_type.request import PrePackTypeRequestSchema
+from resources.schema.dictionary.pre_pack_type.response import PrePackTypeResponseSchema
+
 from app import db
 from app import cache
 
@@ -20,6 +27,7 @@ class StoreSectionList(MethodResource, Resource):
     @doc(tags=['dictionary'], description='Read store sections.')
     def get(self):
         sections = DStoreSection.query.order_by(DStoreSection.id.desc()).all()
+
         return StoreSectionResponseSchema(many=True).dump(sections), 200
 
     @doc(tags=['dictionary'], description='Create store section.')
@@ -33,9 +41,16 @@ class StoreSectionList(MethodResource, Resource):
 
         section = DStoreSection()
         section.name = kwargs['name']
-        db.session.add(section)
-        db.session.commit()
-        cache.clear()
+
+        try:
+            db.session.add(section)
+            db.session.commit()
+            cache.clear()
+        except exc.SQLAlchemyError as e:
+            return {
+                       'messages': e.args
+                   }, 503
+
         return StoreSectionResponseSchema().dump(section), 201
 
 
@@ -44,6 +59,7 @@ class StoreSectionDetail(MethodResource, Resource):
     @doc(tags=['dictionary'], description='Read store section.')
     def get(self, id):
         section = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
+
         return StoreSectionResponseSchema().dump(section), 200
 
     @doc(tags=['dictionary'], description='Update store section.')
@@ -61,41 +77,43 @@ class StoreSectionDetail(MethodResource, Resource):
             db.session.add(section)
             db.session.commit()
             cache.clear()
-            return StoreSectionResponseSchema().dump(section), 200
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
 
+        return StoreSectionResponseSchema().dump(section), 200
+
     @doc(tags=['dictionary'], description='Delete store section.')
     def delete(self, id):
-        r = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
+        sections = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
 
         foodstuffs = Foodstuff.query.filter(Foodstuff.store_section_id == id).all()
         if foodstuffs:
             return {
-                       "message": "store section already use"
+                       'message': 'store section already use'
                    }, 422
 
         try:
-            db.session.add(r)
-            db.session.delete(r)
+            db.session.add(sections)
+            db.session.delete(sections)
             db.session.commit()
             cache.clear()
-            return '', 204
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
+
+        return '', 204
 
 
 class UnitList(MethodResource, Resource):
     @cache.cached()
     @doc(tags=['dictionary'], description='Read units.')
     def get(self):
-        r = DUnit.query.order_by(DUnit.id.desc()).all()
-        results = [ob.as_json() for ob in r]
-        return results, 200
+        units = DUnit.query.order_by(DUnit.id.desc()).all()
+
+        return UnitResponseSchema(many=True).dump(units), 200
 
     @doc(tags=['dictionary'], description='Create unit.')
     @use_kwargs(UnitRequestSchema(), location=('json'))
@@ -119,15 +137,16 @@ class UnitList(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return unit.as_json(), 201
+        return UnitResponseSchema().dump(unit), 201
 
 
 class UnitDetail(MethodResource, Resource):
     @cache.cached()
     @doc(tags=['dictionary'], description='Read unit.')
     def get(self, id):
-        r = DUnit.query.filter(DUnit.id == id).first_or_404()
-        return r.as_json(), 200
+        unit = DUnit.query.filter(DUnit.id == id).first_or_404()
+
+        return UnitResponseSchema().dump(unit), 200
 
     @doc(tags=['dictionary'], description='Update unit.')
     @use_kwargs(UnitRequestSchema(), location=('json'))
@@ -145,41 +164,43 @@ class UnitDetail(MethodResource, Resource):
             db.session.add(unit)
             db.session.commit()
             cache.clear()
-            return unit.as_json(), 200
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
 
+        return UnitResponseSchema().dump(unit), 200
+
     @doc(tags=['dictionary'], description='Delete unit.')
     def delete(self, id):
-        r = DUnit.query.filter(DUnit.id == id).first_or_404()
+        unit = DUnit.query.filter(DUnit.id == id).first_or_404()
 
         ingredients = Ingredient.query.filter(Ingredient.unit_id == id).all()
         if ingredients:
             return {
-                       "message": "unit already use"
+                       'message': 'unit already use'
                    }, 422
 
         try:
-            db.session.add(r)
-            db.session.delete(r)
+            db.session.add(unit)
+            db.session.delete(unit)
             db.session.commit()
             cache.clear()
-            return '', 204
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
+
+        return '', 204
 
 
 class StageList(MethodResource, Resource):
     @cache.cached()
     @doc(tags=['dictionary'], description='Read stages.')
     def get(self):
-        r = DStage.query.order_by(DStage.id.desc()).all()
-        results = [ob.as_json() for ob in r]
-        return results, 200
+        stages = DStage.query.order_by(DStage.id.desc()).all()
+
+        return StageResponseSchema(many=True).dump(stages), 200
 
     @doc(tags=['dictionary'], description='Create stage.')
     @use_kwargs(StageRequestSchema(), location=('json'))
@@ -203,15 +224,16 @@ class StageList(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return stage.as_json(), 201
+        return StageResponseSchema().dump(stage), 201
 
 
 class StageDetail(MethodResource, Resource):
     @cache.cached()
     @doc(tags=['dictionary'], description='Read stage.')
     def get(self, id):
-        r = DStage.query.filter(DStage.id == id).first_or_404()
-        return r.as_json(), 200
+        stage = DStage.query.filter(DStage.id == id).first_or_404()
+
+        return StageResponseSchema().dump(stage), 200
 
     @doc(tags=['dictionary'], description='Update stage.')
     @use_kwargs(StageRequestSchema(), location=('json'))
@@ -229,41 +251,43 @@ class StageDetail(MethodResource, Resource):
             db.session.add(stage)
             db.session.commit()
             cache.clear()
-            return stage.as_json(), 200
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
 
+        return StageResponseSchema().dump(stage), 200
+
     @doc(tags=['dictionary'], description='Delete stage.')
     def delete(self, id):
-        r = DStage.query.filter(DStage.id == id).first_or_404()
+        stage = DStage.query.filter(DStage.id == id).first_or_404()
 
         ingredients = Ingredient.query.filter(Ingredient.stage_id == id).all()
         if ingredients:
             return {
-                       "message": "stage already use"
+                       'message': 'stage already use'
                    }, 422
 
         try:
-            db.session.add(r)
-            db.session.delete(r)
+            db.session.add(stage)
+            db.session.delete(stage)
             db.session.commit()
             cache.clear()
-            return '', 204
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
+
+        return '', 204
 
 
 class CategoryList(MethodResource, Resource):
     @cache.cached()
     @doc(tags=['dictionary'], description='Read categories.')
     def get(self):
-        r = DCategory.query.order_by(DCategory.id.desc()).all()
-        results = [ob.as_json() for ob in r]
-        return results, 200
+        categories = DCategory.query.order_by(DCategory.id.desc()).all()
+
+        return CategoryResponseSchema(many=True).dump(categories), 200
 
     @doc(tags=['dictionary'], description='Create category.')
     @use_kwargs(CategoryRequestSchema(), location=('json'))
@@ -287,15 +311,16 @@ class CategoryList(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return category.as_json(), 201
+        return CategoryResponseSchema().dump(category), 201
 
 
 class CategoryDetail(MethodResource, Resource):
     @cache.cached()
     @doc(tags=['dictionary'], description='Read category.')
     def get(self, id):
-        r = DCategory.query.filter(DCategory.id == id).first_or_404()
-        return r.as_json(), 200
+        category = DCategory.query.filter(DCategory.id == id).first_or_404()
+
+        return CategoryResponseSchema().dump(category), 200
 
     @doc(tags=['dictionary'], description='Update category.')
     @use_kwargs(CategoryRequestSchema(), location=('json'))
@@ -313,20 +338,21 @@ class CategoryDetail(MethodResource, Resource):
             db.session.add(category)
             db.session.commit()
             cache.clear()
-            return category.as_json(), 200
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
 
+        return CategoryResponseSchema().dump(category), 200
+
     @doc(tags=['dictionary'], description='Delete category.')
     def delete(self, id):
         category = DCategory.query.filter(DCategory.id == id).first_or_404()
 
-        dishes = Dish.query.filter(Dish.categories.contains(category)).all()  # todo
+        dishes = Dish.query.filter(Dish.categories.contains(category)).all()
         if dishes:
             return {
-                       "message": "category already use"
+                       'message': 'category already use'
                    }, 422
 
         try:
@@ -334,20 +360,21 @@ class CategoryDetail(MethodResource, Resource):
             db.session.delete(category)
             db.session.commit()
             cache.clear()
-            return '', 204
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
+
+        return '', 204
 
 
 class PrePackTypeList(MethodResource, Resource):
     @cache.cached()
     @doc(tags=['dictionary'], description='Read pre pack types.')
     def get(self):
-        r = DPrePackType.query.order_by(DPrePackType.id.desc()).all()
-        results = [ob.as_json() for ob in r]
-        return results, 200
+        pre_pack_types = DPrePackType.query.order_by(DPrePackType.id.desc()).all()
+
+        return PrePackTypeResponseSchema(many=True).dump(pre_pack_types), 200
 
     @doc(tags=['dictionary'], description='Create pre pack type.')
     @use_kwargs(PrePackTypeRequestSchema(), location=('json'))
@@ -371,15 +398,16 @@ class PrePackTypeList(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return pre_pack_type.as_json(), 201
+        return PrePackTypeResponseSchema().dump(pre_pack_type), 201
 
 
 class PrePackTypeDetail(MethodResource, Resource):
     @cache.cached()
     @doc(tags=['dictionary'], description='Read pre pack type.')
     def get(self, id):
-        r = DPrePackType.query.filter(DPrePackType.id == id).first_or_404()
-        return r.as_json(), 200
+        pre_pack_type = DPrePackType.query.filter(DPrePackType.id == id).first_or_404()
+
+        return PrePackTypeResponseSchema().dump(pre_pack_type), 200
 
     @doc(tags=['dictionary'], description='Update pre pack type.')
     @use_kwargs(PrePackTypeRequestSchema(), location=('json'))
@@ -397,11 +425,12 @@ class PrePackTypeDetail(MethodResource, Resource):
             db.session.add(pre_pack_type)
             db.session.commit()
             cache.clear()
-            return pre_pack_type.as_json(), 200
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
+
+        return PrePackTypeResponseSchema().dump(pre_pack_type), 200
 
     @doc(tags=['dictionary'], description='Delete pre pack type.')
     def delete(self, id):
@@ -410,7 +439,7 @@ class PrePackTypeDetail(MethodResource, Resource):
         ingredients = Ingredient.query.filter(Ingredient.pre_pack_type_id == id).all()
         if ingredients:
             return {
-                       "message": "pre pack type already use"
+                       'message': 'pre pack type already use'
                    }, 422
 
         try:
@@ -418,8 +447,9 @@ class PrePackTypeDetail(MethodResource, Resource):
             db.session.delete(pre_pack_type)
             db.session.commit()
             cache.clear()
-            return '', 204
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
+
+        return '', 204
