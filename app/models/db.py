@@ -9,15 +9,6 @@ class DCategory(db.Model):
 
     dishes = db.relationship('Dish', secondary='dish_categories', backref='d_category')
 
-    def __str__(self):
-        return self.name
-
-    def as_json(self):
-        return {
-            'id': self.id,
-            'name': self.name
-        }
-
 
 class DPrePackType(db.Model):
     __tablename__ = 'd_pre_pack_type'
@@ -25,24 +16,12 @@ class DPrePackType(db.Model):
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     name = db.Column(db.Text)
 
-    def as_json(self):
-        return {
-            'id': self.id,
-            'name': self.name
-        }
-
 
 class DStage(db.Model):
     __tablename__ = 'd_stage'
 
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
     name = db.Column(db.Text)
-
-    def as_json(self):
-        return {
-            'id': self.id,
-            'name': self.name
-        }
 
 
 class DStoreSection(db.Model):
@@ -52,18 +31,11 @@ class DStoreSection(db.Model):
     name = db.Column(db.Text)
 
 
-
 class DUnit(db.Model):
     __tablename__ = 'd_unit'
 
     name = db.Column(db.Text)
     id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
-
-    def as_json(self):
-        return {
-            'id': self.id,
-            'name': self.name
-        }
 
 
 class Foodstuff(db.Model):
@@ -132,38 +104,13 @@ class Ingredient(db.Model):
     pre_pack_type_id = db.Column(db.ForeignKey('d_pre_pack_type.id'))
     stage_id = db.Column(db.ForeignKey('d_stage.id'))
 
-    dish = db.relationship('Dish', primaryjoin='Ingredient.dish_id == Dish.id',
-                           backref='ingredients')
+    dish = db.relationship('Dish', primaryjoin='Ingredient.dish_id == Dish.id', backref='ingredients')
     foodstuff = db.relationship('Foodstuff', primaryjoin='Ingredient.foodstuff_id == Foodstuff.id')
-    ingredient_alternatives = db.relationship('Foodstuff', secondary=t_ingredient_alternatives, passive_deletes=True)
+    alternatives = db.relationship('Foodstuff', secondary=t_ingredient_alternatives, passive_deletes=True)
 
-    prepack_type = db.relationship('DPrePackType', primaryjoin='Ingredient.pre_pack_type_id == DPrePackType.id')
+    pre_pack_type = db.relationship('DPrePackType', primaryjoin='Ingredient.pre_pack_type_id == DPrePackType.id')
     stage = db.relationship('DStage', primaryjoin='Ingredient.stage_id == DStage.id')
     unit = db.relationship('DUnit', primaryjoin='Ingredient.unit_id == DUnit.id')
-
-    def as_json(self):
-        result = {
-            'id': self.id,
-            'foodstuff': self.foodstuff.name,
-            'amount': self.amount,
-            'unit': self.unit.name
-        }
-
-        if self.stage:
-            result.update({'stage': self.stage.name})
-        else:
-            result.update({'stage': 'other'})
-
-        if self.prepack_type:
-            result.update({'pre_pack': self.prepack_type.name})
-
-        if self.ingredient_alternatives:
-            alternatives = []
-            for ai in self.ingredient_alternatives:
-                alternatives.append(ai.name)
-            result.update({'alternatives': alternatives})
-
-        return result
 
 
 class Dish(db.Model):

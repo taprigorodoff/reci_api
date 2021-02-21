@@ -3,6 +3,7 @@ from sqlalchemy import exc
 from models.db import Dish, Ingredient, Foodstuff
 
 from resources.schema.ingredient.request import IngredientRequestSchema
+from resources.schema.ingredient.response import IngredientResponseSchema
 
 from app import db
 
@@ -11,9 +12,16 @@ from flask_apispec import doc, use_kwargs
 
 
 class IngredientList(MethodResource, Resource):
+
+    @doc(tags=['ingredient'], description='Read dish ingredients.')
+    def get(self, dish_id):
+        dish = Dish.query.filter(Dish.id == dish_id).first_or_404()
+
+        return IngredientResponseSchema().dump(dish.ingredients, many=True), 200
+
     @doc(tags=['ingredient'], description='Create dish ingredient.')
     @use_kwargs(IngredientRequestSchema(), location=('json'))
-    #todo документировать коды ошибок
+    # todo документировать коды ошибок
     def post(self, dish_id, **kwargs):
 
         validation_errors = IngredientRequestSchema().validate(kwargs)
@@ -29,7 +37,7 @@ class IngredientList(MethodResource, Resource):
                         ]
                     }
                 )
-            for alternative_ingredient in exist_ingredient.ingredient_alternatives:
+            for alternative_ingredient in exist_ingredient.alternatives:
                 if alternative_ingredient.id == kwargs['foodstuff_id']:
                     validation_errors.update(
                         {
@@ -44,23 +52,22 @@ class IngredientList(MethodResource, Resource):
                        'messages': validation_errors
                    }, 400
 
-        ri = Ingredient()
-        ri.dish_id = dish_id
-        ri.foodstuff_id = kwargs['foodstuff_id']
-        ri.amount = kwargs['amount']
-        ri.unit_id = kwargs['unit_id']
+        ingredient = Ingredient()
+        ingredient.dish_id = dish_id
+        ingredient.foodstuff_id = kwargs['foodstuff_id']
+        ingredient.amount = kwargs['amount']
+        ingredient.unit_id = kwargs['unit_id']
         if 'pre_pack_type_id' in kwargs.keys():
-            ri.pre_pack_type_id = kwargs['pre_pack_type_id']
+            ingredient.pre_pack_type_id = kwargs['pre_pack_type_id']
         if 'stage_id' in kwargs.keys():
-            ri.stage_id = kwargs['stage_id']
+            ingredient.stage_id = kwargs['stage_id']
 
         if 'alternative_ids' in kwargs.keys():
             for alternative_id in kwargs['alternative_ids']:
-                ri.ingredient_alternatives.append(Foodstuff.query.get(alternative_id))
-
-        db.session.add(ri)
+                ingredient.alternatives.append(Foodstuff.query.get(alternative_id))
 
         try:
+            db.session.add(ingredient)
             db.session.commit()
         except exc.SQLAlchemyError as e:
             db.session.rollback()
@@ -68,30 +75,16 @@ class IngredientList(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return ri.as_json(), 200
-
-    @doc(tags=['ingredient'], description='Read dish ingredients.')
-    def get(self, dish_id):
-        dish = Dish.query.filter(Dish.id == dish_id).first_or_404()
-        ingredients = {}
-        for ob in dish.ingredients:
-            ingredient = ob.as_json()
-
-            stage_name = ingredient.pop('stage')
-
-            tmp_ingredients = ingredients.get(stage_name, [])
-            tmp_ingredients.append(ingredient)
-            ingredients.update({stage_name: tmp_ingredients})
-
-        return ingredients, 200
+        return IngredientResponseSchema().dump(ingredient), 201
 
 
 class IngredientDetail(MethodResource, Resource):
     @doc(tags=['ingredient'], description='Read dish ingredient.')
     def get(self, dish_id, id):
-        ri = Ingredient.query.filter(Ingredient.id == id,
-                                           Ingredient.dish_id == dish_id).first_or_404()
-        return ri.as_json(), 200
+        ingredient = Ingredient.query.filter(Ingredient.id == id,
+                                             Ingredient.dish_id == dish_id).first_or_404()
+
+        return IngredientResponseSchema().dump(ingredient), 200
 
     @doc(tags=['ingredient'], description='Update dish ingredient.')
     @use_kwargs(IngredientRequestSchema(), location=('json'))
@@ -105,7 +98,7 @@ class IngredientDetail(MethodResource, Resource):
                        'messages': f'dish {dish_id} is not found'
                    }, 404
 
-        if ingredient.dish_id != dish_id:
+        if int(ingredient.dish_id) != int(dish_id):
             return {
                        'messages': f'ingredient {id} is not connected with dish {dish_id}'
                    }, 400
@@ -123,7 +116,7 @@ class IngredientDetail(MethodResource, Resource):
                             ]
                         }
                     )
-                for alternative_ingredient in exist_ingredient.ingredient_alternatives:
+                for alternative_ingredient in exist_ingredient.alternatives:
                     if alternative_ingredient.id == kwargs['foodstuff_id']:
                         validation_errors.update(
                             {
@@ -154,13 +147,12 @@ class IngredientDetail(MethodResource, Resource):
             new_ingredient_alternatives = []
             for alternative_id in kwargs['alternative_ids']:
                 new_ingredient_alternatives.append(Foodstuff.query.get(alternative_id))
-            ingredient.ingredient_alternatives = new_ingredient_alternatives
+            ingredient.alternatives = new_ingredient_alternatives
         else:
-            ingredient.ingredient_alternatives = []
-
-        db.session.add(ingredient)
+            ingredient.alternatives = []
 
         try:
+            db.session.add(ingredient)
             db.session.commit()
         except exc.SQLAlchemyError as e:
             db.session.rollback()
@@ -168,12 +160,12 @@ class IngredientDetail(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return ingredient.as_json(), 201
+        return IngredientResponseSchema().dump(ingredient), 200
 
     @doc(tags=['ingredient'], description='Delete dish ingredient.')
     def delete(self, dish_id, id):
         ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
-        if ingredient.dish_id != dish_id:
+        if int(ingredient.dish_id) != int(dish_id):
             return {
                        'messages': f'ingredient {id} is not connected with dish {dish_id}'
                    }, 400
@@ -188,4 +180,3 @@ class IngredientDetail(MethodResource, Resource):
             return {
                        'messages': e.args
                    }, 503
-

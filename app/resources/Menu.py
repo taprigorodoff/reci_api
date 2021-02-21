@@ -227,8 +227,8 @@ class MenuShoppingList(MethodResource, Resource):
             for ingredient in menu_dish.dish.ingredients:
 
                 good_name = ingredient.foodstuff.name
-                if ingredient.ingredient_alternatives:
-                    good_name += '/' + '/'.join([i.name for i in ingredient.ingredient_alternatives])
+                if ingredient.alternatives:
+                    good_name += '/' + '/'.join([i.name for i in ingredient.alternatives])
 
                 store_section = ingredient.foodstuff.store_section.name
                 tmp_goods = result.get(store_section, {})
