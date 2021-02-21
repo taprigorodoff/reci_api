@@ -1,24 +1,24 @@
-from flask_restful import Resource, abort
+from flask_restful import Resource
 from sqlalchemy import exc
-from models.db import Dish
 from models.db import Menu, MenuDish
 
 from resources.schema.menu.request import MenuRequestSchema
+from resources.schema.menu.response import MenuResponseSchema
+from resources.schema.menudish.request import MenuDishRequestSchema
+from resources.schema.menudish.response import MenuDishResponseSchema
 
 from app import db
 
 from flask_apispec.views import MethodResource
 from flask_apispec import doc, use_kwargs
-from marshmallow import Schema, fields, ValidationError, types
-import typing
 
 
 class MenuList(MethodResource, Resource):
     @doc(tags=['menu'], description='Read all menus.')
     def get(self):
-        r = Menu.query.order_by(Menu.id.desc()).all()
-        results = [ob.as_json() for ob in r]
-        return results, 200
+        menus = Menu.query.order_by(Menu.id.desc()).all()
+
+        return MenuResponseSchema().dump(menus, many=True), 200
 
     @doc(tags=['menu'], description='Create menu.')
     @use_kwargs(MenuRequestSchema(), location=('json'))
@@ -40,14 +40,15 @@ class MenuList(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return menu.as_json(), 200
+        return MenuResponseSchema().dump(menu), 201
 
 
 class MenuDetail(MethodResource, Resource):
     @doc(tags=['menu'], description='Read menu.')
     def get(self, id):
-        r = Menu.query.filter(Menu.id == id).first_or_404()
-        return r.as_json(), 200
+        menu = Menu.query.filter(Menu.id == id).first_or_404()
+
+        return MenuResponseSchema().dump(menu), 200
 
     @doc(tags=['menu'], description='Update menu.')
     @use_kwargs(MenuRequestSchema(), location=('json'))
@@ -63,11 +64,12 @@ class MenuDetail(MethodResource, Resource):
         try:
             db.session.add(menu)
             db.session.commit()
-            return menu.as_json(), 200
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
+
+        return MenuResponseSchema().dump(menu), 200
 
     @doc(tags=['menu'], description='Delete menu.')
     def delete(self, id):
@@ -77,47 +79,20 @@ class MenuDetail(MethodResource, Resource):
             db.session.add(r)
             db.session.delete(r)
             db.session.commit()
-            return '', 204
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
 
-
-class MenuDishRequestSchema(Schema):
-    dish_id = fields.Integer(required=True, description="API type of awesome API")
-    portion = fields.Integer(required=True, description="API type of awesome API")
-
-    def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
-        abort(400, message=error.messages)
-
-    def validate(
-        self,
-        data: typing.Mapping,
-        *,
-        many: typing.Optional[bool] = None,
-        partial: typing.Optional[typing.Union[bool, types.StrSequenceOrSet]] = None
-    ) -> typing.Dict[str, typing.List[str]]:
-        validation_errors = {}
-        dish = Dish.query.filter(Dish.id == data['dish_id']).first()
-        if not dish:
-            validation_errors.update(
-                {
-                    'dish_id': [
-                        'Bad choice for dish_id'
-                    ]
-                }
-            )
-
-        return validation_errors
+        return '', 204
 
 
 class MenuDishList(MethodResource, Resource):
     @doc(tags=['menu'], description='Read all menu dishes.')
     def get(self, menu_id):
-        r = MenuDish.query.filter(MenuDish.menu_id == menu_id).all()
-        results = [ob.as_json() for ob in r]
-        return results, 200
+        menu_dishes = MenuDish.query.filter(MenuDish.menu_id == menu_id).all()
+
+        return MenuDishResponseSchema().dump(menu_dishes, many=True), 200
 
     @doc(tags=['menu'], description='Create dish ingredient.')
     @use_kwargs(MenuDishRequestSchema(), location=('json'))
@@ -156,14 +131,15 @@ class MenuDishList(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return menu_dish.as_json(), 200
+        return MenuDishResponseSchema().dump(menu_dish), 201
 
 
 class MenuDishDetail(MethodResource, Resource):
     @doc(tags=['menu'], description='Read menu dish.')
     def get(self, menu_id, id):
-        r = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
-        return r.as_json(), 200
+        menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
+        
+        return MenuDishResponseSchema().dump(menu_dish), 200
 
     @doc(tags=['menu'], description='Update menu dish.')
     @use_kwargs(MenuDishRequestSchema(), location=('json'))
@@ -171,22 +147,23 @@ class MenuDishDetail(MethodResource, Resource):
         validation_errors = MenuDishRequestSchema().validate(kwargs)
 
         menu = Menu.query.filter(Menu.id == menu_id).first_or_404()
-        for exist_dish in menu.dishes:
-            if exist_dish.id == kwargs['dish_id']:
-                validation_errors.update(
-                    {
-                        'dish_id': [
-                            f'Already added to menu {menu_id}'
-                        ]
-                    }
-                )
+        menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
+
+        if menu_dish.dish_id != kwargs['dish_id']:
+            for exist_dish in menu.dishes:
+                if exist_dish.id == kwargs['dish_id']:
+                    validation_errors.update(
+                        {
+                            'dish_id': [
+                                f'Already added to menu {menu_id}'
+                            ]
+                        }
+                    )
 
         if validation_errors:
             return {
                        'messages': validation_errors
                    }, 400
-
-        menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
 
         menu_dish.dish_id = kwargs['dish_id']
         menu_dish.portion = kwargs['portion']
@@ -200,7 +177,7 @@ class MenuDishDetail(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-        return menu_dish.as_json(), 200
+        return MenuDishResponseSchema().dump(menu_dish), 200
 
     @doc(tags=['menu'], description='Delete menu dish.')
     def delete(self, menu_id, id):
@@ -210,11 +187,12 @@ class MenuDishDetail(MethodResource, Resource):
             db.session.add(menu_dish)
             db.session.delete(menu_dish)
             db.session.commit()
-            return '', 204
         except exc.SQLAlchemyError as e:
             return {
                        'messages': e.args
                    }, 503
+
+        return '', 204
 
 
 class MenuShoppingList(MethodResource, Resource):
