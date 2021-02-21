@@ -198,45 +198,44 @@ class MenuDishDetail(MethodResource, Resource):
 class MenuShoppingList(MethodResource, Resource):
     @doc(tags=['menu'], description='Read shopping list for menu.')
     def get(self, menu_id):
-        r = MenuDish.query.filter(MenuDish.menu_id == menu_id).all()
+        menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id).first_or_404()
         result = {}
 
-        for menu_dish in r:
-            for ingredient in menu_dish.dish.ingredients:
+        for ingredient in menu_dish.dish.ingredients:
 
-                good_name = ingredient.foodstuff.name
-                if ingredient.alternatives:
-                    good_name += '/' + '/'.join([i.name for i in ingredient.alternatives])
+            good_name = ingredient.foodstuff.name
+            if ingredient.alternatives:
+                good_name += '/' + '/'.join([i.name for i in ingredient.alternatives])
 
-                store_section = ingredient.foodstuff.store_section.name
-                tmp_goods = result.get(store_section, {})
-                good = tmp_goods.get(good_name, {})
+            store_section = ingredient.foodstuff.store_section.name
+            tmp_goods = result.get(store_section, {})
+            good = tmp_goods.get(good_name, {})
 
-                if good:
-                    was_update = False
-                    for need in good:
-                        if need['unit'] == ingredient.unit.name:
-                            need['amount'] += ingredient.amount / ingredient.dish.portion * menu_dish.portion
-                            was_update = True
+            if good:
+                was_update = False
+                for need in good:
+                    if need['unit'] == ingredient.unit.name:
+                        need['amount'] += ingredient.amount / ingredient.dish.portion * menu_dish.portion
+                        was_update = True
 
-                    if not was_update:
-                        good.append(
-                            {
-                                'amount': ingredient.amount / ingredient.dish.portion * menu_dish.portion,
-                                'unit': ingredient.unit.name
-                            }
-                        )
-                else:
-                    good = {
-                        good_name: [
-                            {
-                                'amount': ingredient.amount / ingredient.dish.portion * menu_dish.portion,
-                                'unit': ingredient.unit.name
-                            }
-                        ]
-                    }
-                    tmp_goods.update(good)
+                if not was_update:
+                    good.append(
+                        {
+                            'amount': ingredient.amount / ingredient.dish.portion * menu_dish.portion,
+                            'unit': ingredient.unit.name
+                        }
+                    )
+            else:
+                good = {
+                    good_name: [
+                        {
+                            'amount': ingredient.amount / ingredient.dish.portion * menu_dish.portion,
+                            'unit': ingredient.unit.name
+                        }
+                    ]
+                }
+                tmp_goods.update(good)
 
-                result.update({store_section: tmp_goods})
+            result.update({store_section: tmp_goods})
 
         return result, 200
