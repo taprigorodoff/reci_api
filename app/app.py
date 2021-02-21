@@ -26,7 +26,7 @@ from resources.Dictionary import StoreSectionList, StoreSectionDetail, \
                                  PrePackTypeList, PrePackTypeDetail
 from resources.Menu import MenuList, MenuDetail
 from resources.Menu import MenuDishList, MenuDishDetail
-from resources.Menu import MenuShoppingList
+from resources.Menu import MenuShoppingList, MenuPrePackList
 
 api.add_resource(DishList, '/dishes')
 api.add_resource(DishDetail, '/dishes/<id>')
@@ -55,6 +55,7 @@ api.add_resource(MenuDishList, '/menus/<menu_id>/dishes')
 api.add_resource(MenuDishDetail, '/menus/<menu_id>/dishes/<id>')
 
 api.add_resource(MenuShoppingList, '/menus/<menu_id>/shopping_lists')
+api.add_resource(MenuPrePackList, '/menus/<menu_id>/pre_pack_lists')
 
 docs.register(DishList)
 docs.register(DishDetail)
@@ -80,4 +81,6 @@ docs.register(MenuList)
 docs.register(MenuDetail)
 docs.register(MenuDishList)
 docs.register(MenuDishDetail)
+
 docs.register(MenuShoppingList)
+docs.register(MenuPrePackList)

@@ -239,3 +239,47 @@ class MenuShoppingList(MethodResource, Resource):
             result.update({store_section: tmp_goods})
 
         return result, 200
+
+
+class MenuPrePackList(MethodResource, Resource):
+    @doc(tags=['menu'], description='Read pre_pack list for menu.')
+    def get(self, menu_id):
+        menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id).first_or_404()
+        result = {}
+
+        for ingredient in menu_dish.dish.ingredients:
+            if ingredient.pre_pack_type:
+                foodstuff_name = ingredient.foodstuff.name
+                pre_pack_type = ingredient.pre_pack_type.name
+
+                tmp_foodstuffs = result.get(pre_pack_type, {})
+                foodstuff = tmp_foodstuffs.get(foodstuff_name, {})
+
+                if foodstuff:
+                    was_update = False
+                    for need in foodstuff:
+                        if need['unit'] == ingredient.unit.name:
+                            need['amount'] += ingredient.amount / ingredient.dish.portion * menu_dish.portion
+                            was_update = True
+
+                    if not was_update:
+                        foodstuff.append(
+                            {
+                                'amount': ingredient.amount / ingredient.dish.portion * menu_dish.portion,
+                                'unit': ingredient.unit.name
+                            }
+                        )
+                else:
+                    foodstuff = {
+                        foodstuff_name: [
+                            {
+                                'amount': ingredient.amount / ingredient.dish.portion * menu_dish.portion,
+                                'unit': ingredient.unit.name
+                            }
+                        ]
+                    }
+                    tmp_foodstuffs.update(foodstuff)
+
+                result.update({pre_pack_type: tmp_foodstuffs})
+
+        return result, 200
