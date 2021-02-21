@@ -54,8 +54,8 @@ api.add_resource(MenuDetail, '/menus/<id>')
 api.add_resource(MenuDishList, '/menus/<menu_id>/dishes')
 api.add_resource(MenuDishDetail, '/menus/<menu_id>/dishes/<id>')
 
-api.add_resource(MenuShoppingList, '/menus/<menu_id>/shopping_lists')
-api.add_resource(MenuPrePackList, '/menus/<menu_id>/pre_pack_lists')
+api.add_resource(MenuShoppingList, '/menus/<menu_id>/shopping_list')
+api.add_resource(MenuPrePackList, '/menus/<menu_id>/pre_pack_list')
 
 docs.register(DishList)
 docs.register(DishDetail)
