@@ -249,12 +249,15 @@ class MenuPrePackList(MethodResource, Resource):
         result = {}
 
         for menu_dish in menu.menu_dishes:
+            dish_name = menu_dish.dish.name
+            dish_pre_packs = result.get(dish_name, {})
+
             for ingredient in menu_dish.dish.ingredients:
                 if ingredient.pre_pack_type:
                     foodstuff_name = ingredient.foodstuff.name
                     pre_pack_type = ingredient.pre_pack_type.name
 
-                    tmp_foodstuffs = result.get(pre_pack_type, {})
+                    tmp_foodstuffs = dish_pre_packs.get(pre_pack_type, {})
                     foodstuff = tmp_foodstuffs.get(foodstuff_name, {})
 
                     if foodstuff:
@@ -282,6 +285,10 @@ class MenuPrePackList(MethodResource, Resource):
                         }
                         tmp_foodstuffs.update(foodstuff)
 
-                    result.update({pre_pack_type: tmp_foodstuffs})
+                    dish_pre_packs.update({pre_pack_type: tmp_foodstuffs})
+
+            if dish_pre_packs:
+                dish_pre_packs.update({'portion': menu_dish.portion})
+                result.update({dish_name: dish_pre_packs})
 
         return result, 200
