@@ -3,11 +3,13 @@ from flask_caching import Cache
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from flask_cors import CORS
 from config import Configuration
 
 from flask_apispec.extension import FlaskApiSpec
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"*": {"origins": "*"}})
 api = Api(app)
 app.config.from_object(Configuration)
 
