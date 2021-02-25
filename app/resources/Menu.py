@@ -73,11 +73,17 @@ class MenuDetail(MethodResource, Resource):
 
     @doc(tags=['menu'], description='Delete menu.')
     def delete(self, id):
-        r = Menu.query.filter(Menu.id == id).first_or_404()
+        menu = Menu.query.filter(Menu.id == id).first_or_404()
+
+        uses = MenuDish.query.filter(MenuDish.menu_id == id).all()
+        if uses:
+            return {
+                       "message": "Menu already use"
+                   }, 422
 
         try:
-            db.session.add(r)
-            db.session.delete(r)
+            db.session.add(menu)
+            db.session.delete(menu)
             db.session.commit()
         except exc.SQLAlchemyError as e:
             return {
