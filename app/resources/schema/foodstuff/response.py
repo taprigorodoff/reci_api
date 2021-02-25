@@ -15,6 +15,7 @@ class FoodstuffsResponseSchema(ma.SQLAlchemySchema):
         include_relationships = True
         load_instance = True
 
+    id = ma.auto_field()
     name = ma.auto_field()
     store_section = ma.Pluck(StoreSectionResponseSchema, 'name')
 
@@ -30,6 +31,7 @@ class FoodstuffResponseSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Foodstuff
 
+    id = ma.auto_field()
     name = ma.auto_field()
     store_section = ma.Pluck(StoreSectionResponseSchema, 'name')
 
