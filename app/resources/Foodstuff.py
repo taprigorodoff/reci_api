@@ -43,6 +43,16 @@ class FoodstuffList(MethodResource, Resource):
     @use_kwargs(FoodstuffRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = FoodstuffRequestSchema().validate(kwargs)
+
+        if Foodstuff.query.filter(Foodstuff.name == kwargs["name"]).first():
+            validation_errors.update(
+                {
+                    'name': [
+                        'Already exist'
+                    ]
+                }
+            )
+
         if validation_errors:
             return {
                        'messages': validation_errors
@@ -72,11 +82,22 @@ class FoodstuffDetail(MethodResource, Resource):
     @use_kwargs(FoodstuffRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = FoodstuffRequestSchema().validate(kwargs)
+        foodstuff = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
+
+        if foodstuff.name != kwargs["name"]:
+            if Foodstuff.query.filter(Foodstuff.name == kwargs["name"]).first():
+                validation_errors.update(
+                    {
+                        'name': [
+                            'Already exist'
+                        ]
+                    }
+                )
+
         if validation_errors:
             return {
                        'messages': validation_errors
                    }, 400
-        foodstuff = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
         foodstuff.name = kwargs['name']
         foodstuff.store_section_id = kwargs['store_section_id']
 

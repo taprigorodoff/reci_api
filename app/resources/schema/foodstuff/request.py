@@ -40,12 +40,4 @@ class FoodstuffRequestSchema(Schema):
                     ]
                 }
             )
-        if Foodstuff.query.filter(Foodstuff.name == data["name"]).first():
-            validation_errors.update(
-                {
-                    'name': [
-                        'Already exist'
-                    ]
-                }
-            )
         return validation_errors
