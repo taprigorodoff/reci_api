@@ -27,9 +27,12 @@ class IngredientList(MethodResource, Resource):
         validation_errors = IngredientRequestSchema().validate(kwargs)
 
         dish = Dish.query.filter(Dish.id == dish_id).first_or_404()
+        stage_id = None
+        if 'stage_id' in kwargs.keys():
+            stage_id = kwargs['stage_id']
 
         for exist_ingredient in dish.ingredients:
-            if exist_ingredient.foodstuff_id == kwargs['foodstuff_id']:
+            if exist_ingredient.foodstuff_id == kwargs['foodstuff_id'] and exist_ingredient.stage_id == stage_id:
                 validation_errors.update(
                     {
                         'foodstuff_id': [
@@ -38,7 +41,7 @@ class IngredientList(MethodResource, Resource):
                     }
                 )
             for alternative_ingredient in exist_ingredient.alternatives:
-                if alternative_ingredient.id == kwargs['foodstuff_id']:
+                if alternative_ingredient.id == kwargs['foodstuff_id'] and exist_ingredient.stage_id == stage_id:
                     validation_errors.update(
                         {
                             'foodstuff_id': [
