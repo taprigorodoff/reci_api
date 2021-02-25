@@ -13,10 +13,12 @@ class DishesResponseSchema(ma.SQLAlchemySchema):
     class Meta:
         model = Dish
 
+    id = ma.auto_field()
     name = ma.auto_field()
     cook_time = ma.auto_field()
     all_time = ma.auto_field()
-    categories = ma.Nested(CategoryResponseSchema(many=True))
+    portion = ma.auto_field()
+    categories = ma.Pluck(CategoryResponseSchema, 'name', many=True)
 
     _links = ma.Hyperlinks({
         'self': {
@@ -35,7 +37,7 @@ class DishResponseSchema(ma.SQLAlchemySchema):
     portion = ma.auto_field()
     cook_time = ma.auto_field()
     all_time = ma.auto_field()
-    categories = ma.Nested(CategoryResponseSchema(many=True))
+    categories = ma.Pluck(CategoryResponseSchema, 'name', many=True)
 
     _links = ma.Hyperlinks({
         'self': {
