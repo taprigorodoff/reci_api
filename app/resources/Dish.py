@@ -45,7 +45,7 @@ class DishList(MethodResource, Resource):
             query = """SELECT DISTINCT dish.id 
                        FROM dish
                        JOIN dish_categories dc ON dc.dish_id = dish.id
-                       JOIN ingredient i ON i.dish_id = dish.id
+                       FULL JOIN ingredient i ON i.dish_id = dish.id
                        WHERE """ + condition
 
             result = db.engine.execute(query)
@@ -164,6 +164,11 @@ class DishDetail(MethodResource, Resource):
     @doc(tags=['dish'], description='Delete dish.')
     def delete(self, id):
         dish = Dish.query.filter(Dish.id == id).first_or_404()
+        if dish.ingredients:
+            return {
+                       'messages': 'dish has ingredients'
+                   }, 400
+
         try:
             db.session.add(dish)
             db.session.delete(dish)
@@ -179,6 +184,6 @@ class DishDetail(MethodResource, Resource):
 
 class DishImg(MethodResource, Resource):
     @doc(tags=['dish'], description='Read dish img.')
-    def get(self, id):
-        response = send_from_directory(directory='images/', filename='{}.jpg'.format(id))
+    def get(self, dish_id):
+        response = send_from_directory(directory='images/', filename='{}.jpg'.format(dish_id))
         return response
