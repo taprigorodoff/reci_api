@@ -166,7 +166,11 @@ class DishDetail(MethodResource, Resource):
         dish = Dish.query.filter(Dish.id == id).first_or_404()
         if dish.ingredients:
             return {
-                       'messages': 'dish has ingredients'
+                       'messages': {
+                           'dish_id': [
+                               'Dish has ingredients'
+                           ]
+                       }
                    }, 400
 
         try:

@@ -96,14 +96,13 @@ class IngredientDetail(MethodResource, Resource):
         dish = Dish.query.filter(Dish.id == dish_id).first_or_404()
         ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
 
-        if not dish:
-            return {
-                       'messages': f'dish {dish_id} is not found'
-                   }, 404
-
         if int(ingredient.dish_id) != int(dish_id):
             return {
-                       'messages': f'ingredient {id} is not connected with dish {dish_id}'
+                       'messages': {
+                           'ingredient_id': [
+                               f'ingredient {id} is not connected with dish {dish_id}'
+                           ]
+                       }
                    }, 400
 
         validation_errors = IngredientRequestSchema().validate(kwargs)
@@ -170,7 +169,11 @@ class IngredientDetail(MethodResource, Resource):
         ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
         if int(ingredient.dish_id) != int(dish_id):
             return {
-                       'messages': f'ingredient {id} is not connected with dish {dish_id}'
+                       'messages': {
+                           'ingredient_id': [
+                               f'ingredient {id} is not connected with dish {dish_id}'
+                           ]
+                       }
                    }, 400
 
         try:
