@@ -91,7 +91,11 @@ class StoreSectionDetail(MethodResource, Resource):
         foodstuffs = Foodstuff.query.filter(Foodstuff.store_section_id == id).all()
         if foodstuffs:
             return {
-                       'message': 'store section already use'
+                       'messages': {
+                           'store_section_id': [
+                               'Already use'
+                           ]
+                       }
                    }, 422
 
         try:
@@ -178,7 +182,11 @@ class UnitDetail(MethodResource, Resource):
         ingredients = Ingredient.query.filter(Ingredient.unit_id == id).all()
         if ingredients:
             return {
-                       'message': 'unit already use'
+                       'messages': {
+                           'unit_id': [
+                               'Already use'
+                           ]
+                       }
                    }, 422
 
         try:
@@ -265,7 +273,11 @@ class StageDetail(MethodResource, Resource):
         ingredients = Ingredient.query.filter(Ingredient.stage_id == id).all()
         if ingredients:
             return {
-                       'message': 'stage already use'
+                       'messages': {
+                           'stage_id': [
+                               'Already use'
+                           ]
+                       }
                    }, 422
 
         try:
@@ -352,7 +364,11 @@ class CategoryDetail(MethodResource, Resource):
         dishes = Dish.query.filter(Dish.categories.contains(category)).all()
         if dishes:
             return {
-                       'message': 'category already use'
+                       'messages': {
+                           'category_id': [
+                               'Already use'
+                           ]
+                       }
                    }, 422
 
         try:
@@ -439,7 +455,11 @@ class PrePackTypeDetail(MethodResource, Resource):
         ingredients = Ingredient.query.filter(Ingredient.pre_pack_type_id == id).all()
         if ingredients:
             return {
-                       'message': 'pre pack type already use'
+                       'messages': {
+                           'pre_pack_type_id': [
+                               'Already use'
+                           ]
+                       }
                    }, 422
 
         try:

@@ -12,7 +12,7 @@ class FoodstuffFilterSchema(Schema):
     store_section_id = fields.Integer(required=False, description="API type of awesome API")
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
-        abort(400, message=error.messages)
+        abort(400, messages=error.messages)
 
     def validate(
         self,

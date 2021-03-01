@@ -8,7 +8,7 @@ class CategoryRequestSchema(Schema):
     name = fields.String(required=True, description="API type of awesome API", validate=validate.Length(max=50))
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
-        abort(400, message=error.messages)
+        abort(400, messages=error.messages)
 
     def validate(
         self,
