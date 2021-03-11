@@ -14,6 +14,7 @@ from resources.schema.dictionary.category.request import CategoryRequestSchema
 from resources.schema.dictionary.category.response import CategoryResponseSchema
 from resources.schema.dictionary.pre_pack_type.request import PrePackTypeRequestSchema
 from resources.schema.dictionary.pre_pack_type.response import PrePackTypeResponseSchema
+from common.response_http_codes import response_http_codes
 
 from app import db
 from app import cache
@@ -24,13 +25,13 @@ from flask_apispec import doc, use_kwargs
 
 class StoreSectionList(MethodResource, Resource):
     @cache.cached()
-    @doc(tags=['dictionary'], description='Read store sections.')
+    @doc(tags=['dictionary'], description='Read store sections.', responses=response_http_codes([200]))
     def get(self):
         sections = DStoreSection.query.order_by(DStoreSection.id.desc()).all()
 
         return StoreSectionResponseSchema(many=True).dump(sections), 200
 
-    @doc(tags=['dictionary'], description='Create store section.')
+    @doc(tags=['dictionary'], description='Create store section.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(StoreSectionRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = StoreSectionRequestSchema().validate(kwargs)
@@ -56,13 +57,13 @@ class StoreSectionList(MethodResource, Resource):
 
 class StoreSectionDetail(MethodResource, Resource):
     @cache.cached()
-    @doc(tags=['dictionary'], description='Read store section.')
+    @doc(tags=['dictionary'], description='Read store section.', responses=response_http_codes([200, 404]))
     def get(self, id):
         section = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
 
         return StoreSectionResponseSchema().dump(section), 200
 
-    @doc(tags=['dictionary'], description='Update store section.')
+    @doc(tags=['dictionary'], description='Update store section.', responses=response_http_codes([200, 400, 503]))
     @use_kwargs(StoreSectionRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = StoreSectionRequestSchema().validate(kwargs)
@@ -84,7 +85,7 @@ class StoreSectionDetail(MethodResource, Resource):
 
         return StoreSectionResponseSchema().dump(section), 200
 
-    @doc(tags=['dictionary'], description='Delete store section.')
+    @doc(tags=['dictionary'], description='Delete store section.', responses=response_http_codes([204, 422, 503]))
     def delete(self, id):
         sections = DStoreSection.query.filter(DStoreSection.id == id).first_or_404()
 
@@ -113,13 +114,13 @@ class StoreSectionDetail(MethodResource, Resource):
 
 class UnitList(MethodResource, Resource):
     @cache.cached()
-    @doc(tags=['dictionary'], description='Read units.')
+    @doc(tags=['dictionary'], description='Read units.', responses=response_http_codes([200]))
     def get(self):
         units = DUnit.query.order_by(DUnit.id.desc()).all()
 
         return UnitResponseSchema(many=True).dump(units), 200
 
-    @doc(tags=['dictionary'], description='Create unit.')
+    @doc(tags=['dictionary'], description='Create unit.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(UnitRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = UnitRequestSchema().validate(kwargs)
@@ -146,13 +147,13 @@ class UnitList(MethodResource, Resource):
 
 class UnitDetail(MethodResource, Resource):
     @cache.cached()
-    @doc(tags=['dictionary'], description='Read unit.')
+    @doc(tags=['dictionary'], description='Read unit.', responses=response_http_codes([200, 404]))
     def get(self, id):
         unit = DUnit.query.filter(DUnit.id == id).first_or_404()
 
         return UnitResponseSchema().dump(unit), 200
 
-    @doc(tags=['dictionary'], description='Update unit.')
+    @doc(tags=['dictionary'], description='Update unit.', responses=response_http_codes([200, 400, 503]))
     @use_kwargs(UnitRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = UnitRequestSchema().validate(kwargs)
@@ -175,7 +176,7 @@ class UnitDetail(MethodResource, Resource):
 
         return UnitResponseSchema().dump(unit), 200
 
-    @doc(tags=['dictionary'], description='Delete unit.')
+    @doc(tags=['dictionary'], description='Delete unit.', responses=response_http_codes([204, 422, 503]))
     def delete(self, id):
         unit = DUnit.query.filter(DUnit.id == id).first_or_404()
 
@@ -204,13 +205,13 @@ class UnitDetail(MethodResource, Resource):
 
 class StageList(MethodResource, Resource):
     @cache.cached()
-    @doc(tags=['dictionary'], description='Read stages.')
+    @doc(tags=['dictionary'], description='Read stages.', responses=response_http_codes([200]))
     def get(self):
         stages = DStage.query.order_by(DStage.id.desc()).all()
 
         return StageResponseSchema(many=True).dump(stages), 200
 
-    @doc(tags=['dictionary'], description='Create stage.')
+    @doc(tags=['dictionary'], description='Create stage.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(StageRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = StageRequestSchema().validate(kwargs)
@@ -237,13 +238,13 @@ class StageList(MethodResource, Resource):
 
 class StageDetail(MethodResource, Resource):
     @cache.cached()
-    @doc(tags=['dictionary'], description='Read stage.')
+    @doc(tags=['dictionary'], description='Read stage.', responses=response_http_codes([200, 404]))
     def get(self, id):
         stage = DStage.query.filter(DStage.id == id).first_or_404()
 
         return StageResponseSchema().dump(stage), 200
 
-    @doc(tags=['dictionary'], description='Update stage.')
+    @doc(tags=['dictionary'], description='Update stage.', responses=response_http_codes([200, 400, 503]))
     @use_kwargs(StageRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = StageRequestSchema().validate(kwargs)
@@ -266,7 +267,7 @@ class StageDetail(MethodResource, Resource):
 
         return StageResponseSchema().dump(stage), 200
 
-    @doc(tags=['dictionary'], description='Delete stage.')
+    @doc(tags=['dictionary'], description='Delete stage.', responses=response_http_codes([204, 422, 503]))
     def delete(self, id):
         stage = DStage.query.filter(DStage.id == id).first_or_404()
 
@@ -295,13 +296,13 @@ class StageDetail(MethodResource, Resource):
 
 class CategoryList(MethodResource, Resource):
     @cache.cached()
-    @doc(tags=['dictionary'], description='Read categories.')
+    @doc(tags=['dictionary'], description='Read categories.', responses=response_http_codes([200]))
     def get(self):
         categories = DCategory.query.order_by(DCategory.id.desc()).all()
 
         return CategoryResponseSchema(many=True).dump(categories), 200
 
-    @doc(tags=['dictionary'], description='Create category.')
+    @doc(tags=['dictionary'], description='Create category.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(CategoryRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = CategoryRequestSchema().validate(kwargs)
@@ -328,13 +329,13 @@ class CategoryList(MethodResource, Resource):
 
 class CategoryDetail(MethodResource, Resource):
     @cache.cached()
-    @doc(tags=['dictionary'], description='Read category.')
+    @doc(tags=['dictionary'], description='Read category.', responses=response_http_codes([200, 404]))
     def get(self, id):
         category = DCategory.query.filter(DCategory.id == id).first_or_404()
 
         return CategoryResponseSchema().dump(category), 200
 
-    @doc(tags=['dictionary'], description='Update category.')
+    @doc(tags=['dictionary'], description='Update category.', responses=response_http_codes([200, 400, 503]))
     @use_kwargs(CategoryRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = CategoryRequestSchema().validate(kwargs)
@@ -357,7 +358,7 @@ class CategoryDetail(MethodResource, Resource):
 
         return CategoryResponseSchema().dump(category), 200
 
-    @doc(tags=['dictionary'], description='Delete category.')
+    @doc(tags=['dictionary'], description='Delete category.', responses=response_http_codes([204, 422, 503]))
     def delete(self, id):
         category = DCategory.query.filter(DCategory.id == id).first_or_404()
 
@@ -386,13 +387,13 @@ class CategoryDetail(MethodResource, Resource):
 
 class PrePackTypeList(MethodResource, Resource):
     @cache.cached()
-    @doc(tags=['dictionary'], description='Read pre pack types.')
+    @doc(tags=['dictionary'], description='Read pre pack types.', responses=response_http_codes([200]))
     def get(self):
         pre_pack_types = DPrePackType.query.order_by(DPrePackType.id.desc()).all()
 
         return PrePackTypeResponseSchema(many=True).dump(pre_pack_types), 200
 
-    @doc(tags=['dictionary'], description='Create pre pack type.')
+    @doc(tags=['dictionary'], description='Create pre pack type.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(PrePackTypeRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = PrePackTypeRequestSchema().validate(kwargs)
@@ -419,13 +420,13 @@ class PrePackTypeList(MethodResource, Resource):
 
 class PrePackTypeDetail(MethodResource, Resource):
     @cache.cached()
-    @doc(tags=['dictionary'], description='Read pre pack type.')
+    @doc(tags=['dictionary'], description='Read pre pack type.', responses=response_http_codes([200, 404]))
     def get(self, id):
         pre_pack_type = DPrePackType.query.filter(DPrePackType.id == id).first_or_404()
 
         return PrePackTypeResponseSchema().dump(pre_pack_type), 200
 
-    @doc(tags=['dictionary'], description='Update pre pack type.')
+    @doc(tags=['dictionary'], description='Update pre pack type.', responses=response_http_codes([200, 400, 503]))
     @use_kwargs(PrePackTypeRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = PrePackTypeRequestSchema().validate(kwargs)
@@ -448,7 +449,7 @@ class PrePackTypeDetail(MethodResource, Resource):
 
         return PrePackTypeResponseSchema().dump(pre_pack_type), 200
 
-    @doc(tags=['dictionary'], description='Delete pre pack type.')
+    @doc(tags=['dictionary'], description='Delete pre pack type.', responses=response_http_codes([204, 422, 503]))
     def delete(self, id):
         pre_pack_type = DPrePackType.query.filter(DPrePackType.id == id).first_or_404()
 

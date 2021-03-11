@@ -5,6 +5,7 @@ from models.db import Foodstuff, DStoreSection, Ingredient
 from resources.schema.foodstuff.request import FoodstuffRequestSchema
 from resources.schema.foodstuff.filter import FoodstuffFilterSchema
 from resources.schema.foodstuff.response import FoodstuffsResponseSchema, FoodstuffResponseSchema
+from common.response_http_codes import response_http_codes
 from app import db
 
 from flask_apispec.views import MethodResource
@@ -12,7 +13,7 @@ from flask_apispec import doc, use_kwargs
 
 
 class FoodstuffList(MethodResource, Resource):
-    @doc(tags=['foodstuff'], description='Read all Foodstuffs.')
+    @doc(tags=['foodstuff'], description='Read all Foodstuffs.', responses=response_http_codes([200, 400]))
     @use_kwargs(FoodstuffFilterSchema(), location=('query'))
     def get(self, **kwargs):
 
@@ -39,7 +40,7 @@ class FoodstuffList(MethodResource, Resource):
         }
         return result, 200
 
-    @doc(tags=['foodstuff'], description='Create foodstuff.')
+    @doc(tags=['foodstuff'], description='Create foodstuff.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(FoodstuffRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = FoodstuffRequestSchema().validate(kwargs)
@@ -73,12 +74,12 @@ class FoodstuffList(MethodResource, Resource):
 
 
 class FoodstuffDetail(MethodResource, Resource):
-    @doc(tags=['foodstuff'], description='Read foodstuff.')
+    @doc(tags=['foodstuff'], description='Read foodstuff.', responses=response_http_codes([200, 404]))
     def get(self, id):
         foodstuff = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
         return FoodstuffResponseSchema().dump(foodstuff), 200
 
-    @doc(tags=['foodstuff'], description='Update foodstuff.')
+    @doc(tags=['foodstuff'], description='Update foodstuff.', responses=response_http_codes([200, 400, 404, 503]))
     @use_kwargs(FoodstuffRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = FoodstuffRequestSchema().validate(kwargs)
@@ -110,7 +111,7 @@ class FoodstuffDetail(MethodResource, Resource):
                        'messages': e.args
                    }, 503
 
-    @doc(tags=['foodstuff'], description='Delete foodstuff.')
+    @doc(tags=['foodstuff'], description='Delete foodstuff.', responses=response_http_codes([204, 404, 422, 503]))
     def delete(self, id):
         r = Foodstuff.query.filter(Foodstuff.id == id).first_or_404()
 

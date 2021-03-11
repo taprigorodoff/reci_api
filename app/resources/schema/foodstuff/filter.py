@@ -25,7 +25,7 @@ class FoodstuffFilterSchema(Schema):
         cached_store_section = cache.get('view//store_section')
         if cached_store_section:
             raw = json.loads(cached_store_section.response[0])
-            store_section_ids = [cat['id'] for cat in raw]
+            store_section_ids = [cat['id'] for cat in raw] # todo
         else:
             store_section_ids = [cat.id for cat in db.session.query(DStoreSection.id).all()]
 

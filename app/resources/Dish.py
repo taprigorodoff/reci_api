@@ -7,6 +7,7 @@ from models.db import DCategory, DStage, DUnit, DPrePackType
 from resources.schema.dish.request import DishRequestSchema
 from resources.schema.dish.filter import DishFilterSchema
 from resources.schema.dish.response import DishesResponseSchema, DishResponseSchema
+from common.response_http_codes import response_http_codes
 
 from app import db
 
@@ -15,12 +16,9 @@ from flask_apispec import doc, use_kwargs
 
 
 class DishList(MethodResource, Resource):
-    @doc(tags=['dish'], description='Read all dishes.')
+    @doc(tags=['dish'], description='Read all dishes.', responses=response_http_codes([200, 400, 503]))
     @use_kwargs(DishFilterSchema(), location=('query'))
     def get(self, **kwargs):
-        '''
-        Get method represents a GET API method
-        '''
         validation_errors = DishFilterSchema().validate(kwargs)
         if validation_errors:
             return {
@@ -28,7 +26,7 @@ class DishList(MethodResource, Resource):
                    }, 400
 
         page = kwargs.pop('page')
-        per_page = 5
+        per_page = 50
 
         if kwargs:
             conditions = []
@@ -48,7 +46,13 @@ class DishList(MethodResource, Resource):
                        FULL JOIN ingredient i ON i.dish_id = dish.id
                        WHERE """ + condition
 
-            result = db.engine.execute(query)
+            try:
+                result = db.engine.execute(query)
+            except exc.SQLAlchemyError as e:
+                db.session.rollback()
+                return {
+                           'messages': e.args
+                       }, 503
 
             dish_ids = [row[0] for row in result]
             dishes = Dish.query.filter(Dish.id.in_(dish_ids)).order_by(Dish.name.desc()).paginate(page, per_page, False)
@@ -83,7 +87,7 @@ class DishList(MethodResource, Resource):
         }
         return result, 200
 
-    @doc(tags=['dish'], description='Create dish.')
+    @doc(tags=['dish'], description='Create dish.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(DishRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = DishRequestSchema().validate(kwargs)
@@ -124,12 +128,12 @@ class DishList(MethodResource, Resource):
 
 
 class DishDetail(MethodResource, Resource):
-    @doc(tags=['dish'], description='Read dish.')
+    @doc(tags=['dish'], description='Read dish.', responses=response_http_codes([200, 404]))
     def get(self, id):
         dish = Dish.query.filter(Dish.id == id).first_or_404()
         return DishResponseSchema().dump(dish), 200
 
-    @doc(tags=['dish'], description='Update dish.')
+    @doc(tags=['dish'], description='Update dish.', responses=response_http_codes([200, 400, 404, 503]))
     @use_kwargs(DishRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = DishRequestSchema().validate(kwargs)
@@ -161,7 +165,7 @@ class DishDetail(MethodResource, Resource):
 
         return DishResponseSchema().dump(dish), 200
 
-    @doc(tags=['dish'], description='Delete dish.')
+    @doc(tags=['dish'], description='Delete dish.', responses=response_http_codes([204, 400, 404, 503]))
     def delete(self, id):
         dish = Dish.query.filter(Dish.id == id).first_or_404()
         if dish.ingredients:
@@ -171,7 +175,7 @@ class DishDetail(MethodResource, Resource):
                                'Dish has ingredients'
                            ]
                        }
-                   }, 400
+                   }, 400 # TODO 422
 
         try:
             db.session.add(dish)
@@ -187,7 +191,7 @@ class DishDetail(MethodResource, Resource):
 
 
 class DishImg(MethodResource, Resource):
-    @doc(tags=['dish'], description='Read dish img.')
+    @doc(tags=['dish'], description='Read dish img.', responses=response_http_codes([200, 404]))
     def get(self, dish_id):
         response = send_from_directory(directory='images/', filename='{}.jpg'.format(dish_id))
-        return response
+        return response, 200

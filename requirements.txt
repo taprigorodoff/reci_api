@@ -1,4 +1,4 @@
-flask
+flask~=1.1.2
 flask_restful
 flask_sqlalchemy
 flask_caching
@@ -6,4 +6,7 @@ flask-marshmallow
 marshmallow-sqlalchemy
 psycopg2-binary
 apispec_flask_restful
-config
+config~=0.5.0.post0
+apispec~=4.0.0
+marshmallow~=3.10.0
+SQLAlchemy~=1.3.22

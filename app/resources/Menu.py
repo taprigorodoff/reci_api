@@ -6,6 +6,7 @@ from resources.schema.menu.request import MenuRequestSchema
 from resources.schema.menu.response import MenuResponseSchema
 from resources.schema.menudish.request import MenuDishRequestSchema
 from resources.schema.menudish.response import MenuDishResponseSchema
+from common.response_http_codes import response_http_codes
 
 from app import db
 
@@ -14,13 +15,13 @@ from flask_apispec import doc, use_kwargs
 
 
 class MenuList(MethodResource, Resource):
-    @doc(tags=['menu'], description='Read all menus.')
+    @doc(tags=['menu'], description='Read all menus.', responses=response_http_codes([200]))
     def get(self):
         menus = Menu.query.order_by(Menu.id.desc()).all()
 
         return MenuResponseSchema().dump(menus, many=True), 200
 
-    @doc(tags=['menu'], description='Create menu.')
+    @doc(tags=['menu'], description='Create menu.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(MenuRequestSchema(), location=('json'))
     def post(self, **kwargs):
         validation_errors = MenuRequestSchema().validate(kwargs)
@@ -44,13 +45,13 @@ class MenuList(MethodResource, Resource):
 
 
 class MenuDetail(MethodResource, Resource):
-    @doc(tags=['menu'], description='Read menu.')
+    @doc(tags=['menu'], description='Read menu.', responses=response_http_codes([200, 404]))
     def get(self, id):
         menu = Menu.query.filter(Menu.id == id).first_or_404()
 
         return MenuResponseSchema().dump(menu), 200
 
-    @doc(tags=['menu'], description='Update menu.')
+    @doc(tags=['menu'], description='Update menu.', responses=response_http_codes([200, 400, 404, 503]))
     @use_kwargs(MenuRequestSchema(), location=('json'))
     def put(self, id, **kwargs):
         validation_errors = MenuRequestSchema().validate(kwargs)
@@ -71,7 +72,7 @@ class MenuDetail(MethodResource, Resource):
 
         return MenuResponseSchema().dump(menu), 200
 
-    @doc(tags=['menu'], description='Delete menu.')
+    @doc(tags=['menu'], description='Delete menu.', responses=response_http_codes([204, 404, 422, 503]))
     def delete(self, id):
         menu = Menu.query.filter(Menu.id == id).first_or_404()
 
@@ -94,13 +95,13 @@ class MenuDetail(MethodResource, Resource):
 
 
 class MenuDishList(MethodResource, Resource):
-    @doc(tags=['menu'], description='Read all menu dishes.')
+    @doc(tags=['menu'], description='Read all menu dishes.', responses=response_http_codes([200]))
     def get(self, menu_id):
         menu_dishes = MenuDish.query.filter(MenuDish.menu_id == menu_id).all()
 
         return MenuDishResponseSchema().dump(menu_dishes, many=True), 200
 
-    @doc(tags=['menu'], description='Create dish ingredient.')
+    @doc(tags=['menu'], description='Create dish ingredient.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(MenuDishRequestSchema(), location=('json'))
     # todo документировать коды ошибок
     def post(self, menu_id, **kwargs):
@@ -116,7 +117,7 @@ class MenuDishList(MethodResource, Resource):
                             f'Already added to menu {menu_id}'
                         ]
                     }
-                )
+                )  # todo 422
 
         if validation_errors:
             return {
@@ -141,13 +142,13 @@ class MenuDishList(MethodResource, Resource):
 
 
 class MenuDishDetail(MethodResource, Resource):
-    @doc(tags=['menu'], description='Read menu dish.')
+    @doc(tags=['menu'], description='Read menu dish.', responses=response_http_codes([200, 404]))
     def get(self, menu_id, id):
         menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
         
         return MenuDishResponseSchema().dump(menu_dish), 200
 
-    @doc(tags=['menu'], description='Update menu dish.')
+    @doc(tags=['menu'], description='Update menu dish.', responses=response_http_codes([200, 400, 503]))
     @use_kwargs(MenuDishRequestSchema(), location=('json'))
     def put(self, menu_id, id, **kwargs):
         validation_errors = MenuDishRequestSchema().validate(kwargs)
@@ -164,7 +165,7 @@ class MenuDishDetail(MethodResource, Resource):
                                 f'Already added to menu {menu_id}'
                             ]
                         }
-                    )
+                    )  # todo 422
 
         if validation_errors:
             return {
@@ -185,7 +186,7 @@ class MenuDishDetail(MethodResource, Resource):
 
         return MenuDishResponseSchema().dump(menu_dish), 200
 
-    @doc(tags=['menu'], description='Delete menu dish.')
+    @doc(tags=['menu'], description='Delete menu dish.', responses=response_http_codes([204, 404, 503]))
     def delete(self, menu_id, id):
         menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
 
@@ -202,7 +203,7 @@ class MenuDishDetail(MethodResource, Resource):
 
 
 class MenuShoppingList(MethodResource, Resource):
-    @doc(tags=['menu'], description='Read shopping list for menu.')
+    @doc(tags=['menu'], description='Read shopping list for menu.', responses=response_http_codes([200, 404]))
     def get(self, menu_id):
         menu = Menu.query.filter(Menu.id == menu_id).first_or_404()
         result = {}
@@ -249,7 +250,7 @@ class MenuShoppingList(MethodResource, Resource):
 
 
 class MenuPrePackList(MethodResource, Resource):
-    @doc(tags=['menu'], description='Read pre_pack list for menu.')
+    @doc(tags=['menu'], description='Read pre_pack list for menu.', responses=response_http_codes([200, 404]))
     def get(self, menu_id):
         menu = Menu.query.filter(Menu.id == menu_id).first_or_404()
         result = {}

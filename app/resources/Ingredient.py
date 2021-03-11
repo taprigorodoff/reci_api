@@ -4,6 +4,7 @@ from models.db import Dish, Ingredient, Foodstuff
 
 from resources.schema.ingredient.request import IngredientRequestSchema
 from resources.schema.ingredient.response import IngredientResponseSchema
+from common.response_http_codes import response_http_codes
 
 from app import db
 
@@ -13,15 +14,14 @@ from flask_apispec import doc, use_kwargs
 
 class IngredientList(MethodResource, Resource):
 
-    @doc(tags=['ingredient'], description='Read dish ingredients.')
+    @doc(tags=['ingredient'], description='Read dish ingredients.', responses=response_http_codes([200, 404]))
     def get(self, dish_id):
         dish = Dish.query.filter(Dish.id == dish_id).first_or_404()
 
         return IngredientResponseSchema().dump(dish.ingredients, many=True), 200
 
-    @doc(tags=['ingredient'], description='Create dish ingredient.')
+    @doc(tags=['ingredient'], description='Create dish ingredient.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(IngredientRequestSchema(), location=('json'))
-    # todo документировать коды ошибок
     def post(self, dish_id, **kwargs):
 
         validation_errors = IngredientRequestSchema().validate(kwargs)
@@ -82,14 +82,14 @@ class IngredientList(MethodResource, Resource):
 
 
 class IngredientDetail(MethodResource, Resource):
-    @doc(tags=['ingredient'], description='Read dish ingredient.')
+    @doc(tags=['ingredient'], description='Read dish ingredient.', responses=response_http_codes([200, 404]))
     def get(self, dish_id, id):
         ingredient = Ingredient.query.filter(Ingredient.id == id,
                                              Ingredient.dish_id == dish_id).first_or_404()
 
         return IngredientResponseSchema().dump(ingredient), 200
 
-    @doc(tags=['ingredient'], description='Update dish ingredient.')
+    @doc(tags=['ingredient'], description='Update dish ingredient.', responses=response_http_codes([200, 400, 503]))
     @use_kwargs(IngredientRequestSchema(), location=('json'))
     def put(self, dish_id, id, **kwargs):
 
@@ -103,7 +103,7 @@ class IngredientDetail(MethodResource, Resource):
                                f'ingredient {id} is not connected with dish {dish_id}'
                            ]
                        }
-                   }, 400
+                   }, 400  # todo 422
 
         validation_errors = IngredientRequestSchema().validate(kwargs)
 
@@ -164,7 +164,7 @@ class IngredientDetail(MethodResource, Resource):
 
         return IngredientResponseSchema().dump(ingredient), 200
 
-    @doc(tags=['ingredient'], description='Delete dish ingredient.')
+    @doc(tags=['ingredient'], description='Delete dish ingredient.', responses=response_http_codes([204, 400, 404, 503]))
     def delete(self, dish_id, id):
         ingredient = Ingredient.query.filter(Ingredient.id == id).first_or_404()
         if int(ingredient.dish_id) != int(dish_id):
@@ -174,7 +174,7 @@ class IngredientDetail(MethodResource, Resource):
                                f'ingredient {id} is not connected with dish {dish_id}'
                            ]
                        }
-                   }, 400
+                   }, 400  # todo 422
 
         try:
             db.session.add(ingredient)
