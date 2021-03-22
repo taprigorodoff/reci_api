@@ -103,7 +103,7 @@ class IngredientDetail(MethodResource, Resource):
                                f'ingredient {id} is not connected with dish {dish_id}'
                            ]
                        }
-                   }, 400  # todo 422
+                   }, 422
 
         validation_errors = IngredientRequestSchema().validate(kwargs)
 
@@ -174,7 +174,7 @@ class IngredientDetail(MethodResource, Resource):
                                f'ingredient {id} is not connected with dish {dish_id}'
                            ]
                        }
-                   }, 400  # todo 422
+                   }, 422
 
         try:
             db.session.add(ingredient)

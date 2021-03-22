@@ -103,7 +103,6 @@ class MenuDishList(MethodResource, Resource):
 
     @doc(tags=['menu'], description='Create dish ingredient.', responses=response_http_codes([201, 400, 503]))
     @use_kwargs(MenuDishRequestSchema(), location=('json'))
-    # todo документировать коды ошибок
     def post(self, menu_id, **kwargs):
 
         validation_errors = MenuDishRequestSchema().validate(kwargs)

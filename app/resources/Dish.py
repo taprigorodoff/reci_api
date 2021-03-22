@@ -175,7 +175,7 @@ class DishDetail(MethodResource, Resource):
                                'Dish has ingredients'
                            ]
                        }
-                   }, 400 # TODO 422
+                   }, 422
 
         try:
             db.session.add(dish)
