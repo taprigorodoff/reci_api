@@ -25,9 +25,9 @@ class FoodstuffFilterSchema(Schema):
         cached_store_section = cache.get('view//store_section')
         if cached_store_section:
             raw = json.loads(cached_store_section.response[0])
-            store_section_ids = [cat['id'] for cat in raw] # todo
+            store_section_ids = [section['id'] for section in raw]
         else:
-            store_section_ids = [cat.id for cat in db.session.query(DStoreSection.id).all()]
+            store_section_ids = [section.id for section in db.session.query(DStoreSection.id).all()]
 
         validation_errors = {}
         if 'store_section_id' in data.keys() and data['store_section_id'] not in store_section_ids:
