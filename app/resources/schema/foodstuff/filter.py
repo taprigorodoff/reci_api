@@ -9,7 +9,7 @@ import json
 
 
 class FoodstuffFilterSchema(Schema):
-    store_section_id = fields.Integer(required=False, description="API type of awesome API")
+    store_section_id = fields.Integer(required=False)
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
         abort(400, messages=error.messages)

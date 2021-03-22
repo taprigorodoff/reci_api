@@ -11,14 +11,12 @@ import json
 
 
 class IngredientRequestSchema(Schema):
-    foodstuff_id = fields.Integer(required=True, description="API type of awesome API")
-    amount = fields.Float(required=True, description="API type of awesome API")
-    unit_id = fields.Integer(required=True, description="API type of awesome API")
-    pre_pack_type_id = fields.Integer(required=False, description="API type of awesome API") #nullable=True,
-    stage_id = fields.Integer(required=False, description="API type of awesome API") #nullable=True,
-    alternative_ids = fields.List(cls_or_instance=fields.Integer(),
-                             required=False,
-                             description="API type of awesome API") #nullable=True,
+    foodstuff_id = fields.Integer(required=True)
+    amount = fields.Float(required=True)
+    unit_id = fields.Integer(required=True)
+    pre_pack_type_id = fields.Integer(required=False)
+    stage_id = fields.Integer(required=False)
+    alternative_ids = fields.List(cls_or_instance=fields.Integer(), required=False)
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
         abort(400, messages=error.messages)

@@ -9,11 +9,11 @@ import json
 
 
 class DishFilterSchema(Schema):
-    page = fields.Integer(required=True, description="API type of awesome API", validate=validate.Range(min=1))
-    cook_time = fields.Integer(required=False, description="API type of awesome API")
-    all_time = fields.Integer(required=False, description="API type of awesome API")
-    category_id = fields.Integer(required=False, description="API type of awesome API")
-    foodstuff_ids = fields.List(cls_or_instance=fields.Integer(), required=False, description="API type of awesome API")
+    page = fields.Integer(required=True, validate=validate.Range(min=1))
+    cook_time = fields.Integer(required=False)
+    all_time = fields.Integer(required=False)
+    category_id = fields.Integer(required=False)
+    foodstuff_ids = fields.List(cls_or_instance=fields.Integer(), required=False)
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
         abort(400, messages=error.messages)

@@ -10,8 +10,8 @@ import json
 
 
 class FoodstuffRequestSchema(Schema):
-    name = fields.String(required=True, description="API type of awesome API", validate=validate.Length(max=50))
-    store_section_id = fields.Integer(required=True, description="API type of awesome API")
+    name = fields.String(required=True, validate=validate.Length(max=50))
+    store_section_id = fields.Integer(required=True)
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
         abort(400, messages=error.messages)

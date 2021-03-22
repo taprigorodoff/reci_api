@@ -8,8 +8,8 @@ import typing
 
 
 class MenuDishRequestSchema(Schema):
-    dish_id = fields.Integer(required=True, description="API type of awesome API")
-    portion = fields.Integer(required=True, description="API type of awesome API")
+    dish_id = fields.Integer(required=True)
+    portion = fields.Integer(required=True)
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
         abort(400, messages=error.messages)

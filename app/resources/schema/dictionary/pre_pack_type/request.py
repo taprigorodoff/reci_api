@@ -5,7 +5,7 @@ import typing
 
 
 class PrePackTypeRequestSchema(Schema):
-    name = fields.String(required=True, description="API type of awesome API", validate=validate.Length(max=50))
+    name = fields.String(required=True, validate=validate.Length(max=50))
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
         abort(400, messages=error.messages)

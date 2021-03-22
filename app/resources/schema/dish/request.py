@@ -9,14 +9,12 @@ import json
 
 
 class DishRequestSchema(Schema):
-    name = fields.String(required=True, description="API type of awesome API", validate=validate.Length(max=100))
-    description = fields.String(required=True, description="API type of awesome API")
-    portion = fields.Integer(required=True, description="API type of awesome API")
-    cook_time = fields.Integer(required=True, description="API type of awesome API")
-    all_time = fields.Integer(required=True, description="API type of awesome API")
-    categories = fields.List(cls_or_instance=fields.Integer(),
-                             required=True,
-                             description="API type of awesome API")
+    name = fields.String(required=True, validate=validate.Length(max=100))
+    description = fields.String(required=True)
+    portion = fields.Integer(required=True, description='The number of servings for which the recipe is calculated')
+    cook_time = fields.Integer(required=True, description='Active cooking time, in minutes')
+    all_time = fields.Integer(required=True, description='All cooking time, in minutes')
+    categories = fields.List(cls_or_instance=fields.Integer(), required=True)
 
     def handle_error(self, error: ValidationError, __, *, many: bool, **kwargs):
         abort(400, messages=error.messages)
