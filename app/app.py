@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_cors import CORS
 from config import Configuration
+from flask_migrate import Migrate
 
 from flask_apispec.extension import FlaskApiSpec
 
@@ -14,6 +15,7 @@ api = Api(app)
 app.config.from_object(Configuration)
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 ma = Marshmallow(app)
 cache = Cache(app)
 docs = FlaskApiSpec(app)
