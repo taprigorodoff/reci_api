@@ -79,7 +79,11 @@ class MenuDetail(MethodResource, Resource):
         uses = MenuDish.query.filter(MenuDish.menu_id == id).all()
         if uses:
             return {
-                       "message": "Menu already use"
+                       'messages': {
+                           'menu_id': [
+                               'Menu already use'
+                           ]
+                       }
                    }, 422
 
         try:
@@ -101,27 +105,26 @@ class MenuDishList(MethodResource, Resource):
 
         return MenuDishResponseSchema().dump(menu_dishes, many=True), 200
 
-    @doc(tags=['menu'], description='Create dish ingredient.', responses=response_http_codes([201, 400, 503]))
+    @doc(tags=['menu'], description='Create dish ingredient.', responses=response_http_codes([201, 400, 422, 503]))
     @use_kwargs(MenuDishRequestSchema(), location=('json'))
     def post(self, menu_id, **kwargs):
-
         validation_errors = MenuDishRequestSchema().validate(kwargs)
-
-        menu = Menu.query.filter(Menu.id == menu_id).first()
-        for exist_dish in menu.dishes:
-            if exist_dish.id == kwargs['dish_id']:
-                validation_errors.update(
-                    {
-                        'dish_id': [
-                            f'Already added to menu {menu_id}'
-                        ]
-                    }
-                )  # todo 422
 
         if validation_errors:
             return {
                        'messages': validation_errors
                    }, 400
+
+        menu = Menu.query.filter(Menu.id == menu_id).first()
+        for exist_dish in menu.dishes:
+            if exist_dish.id == kwargs['dish_id']:
+                return {
+                           'messages': {
+                               'dish_id': [
+                                   f'Already added to menu {menu_id}'
+                               ]
+                           }
+                       }, 422
 
         menu_dish = MenuDish()
         menu_dish.menu_id = menu_id
@@ -144,13 +147,18 @@ class MenuDishDetail(MethodResource, Resource):
     @doc(tags=['menu'], description='Read menu dish.', responses=response_http_codes([200, 404]))
     def get(self, menu_id, id):
         menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
-        
+
         return MenuDishResponseSchema().dump(menu_dish), 200
 
-    @doc(tags=['menu'], description='Update menu dish.', responses=response_http_codes([200, 400, 503]))
+    @doc(tags=['menu'], description='Update menu dish.', responses=response_http_codes([200, 400, 422, 503]))
     @use_kwargs(MenuDishRequestSchema(), location=('json'))
     def put(self, menu_id, id, **kwargs):
         validation_errors = MenuDishRequestSchema().validate(kwargs)
+
+        if validation_errors:
+            return {
+                       'messages': validation_errors
+                   }, 400
 
         menu = Menu.query.filter(Menu.id == menu_id).first_or_404()
         menu_dish = MenuDish.query.filter(MenuDish.menu_id == menu_id, MenuDish.id == id).first_or_404()
@@ -158,18 +166,13 @@ class MenuDishDetail(MethodResource, Resource):
         if menu_dish.dish_id != kwargs['dish_id']:
             for exist_dish in menu.dishes:
                 if exist_dish.id == kwargs['dish_id']:
-                    validation_errors.update(
-                        {
-                            'dish_id': [
-                                f'Already added to menu {menu_id}'
-                            ]
-                        }
-                    )  # todo 422
-
-        if validation_errors:
-            return {
-                       'messages': validation_errors
-                   }, 400
+                    return {
+                           'messages': {
+                               'dish_id': [
+                                   f'Already added to menu {menu_id}'
+                               ]
+                           }
+                       }, 422
 
         menu_dish.dish_id = kwargs['dish_id']
         menu_dish.portion = kwargs['portion']
