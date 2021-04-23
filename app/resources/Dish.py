@@ -25,9 +25,6 @@ class DishList(MethodResource, Resource):
                        'messages': validation_errors
                    }, 400
 
-        page = kwargs.pop('page')
-        per_page = 50
-
         if kwargs:
             conditions = []
             if 'cook_time' in kwargs.keys():
@@ -40,11 +37,13 @@ class DishList(MethodResource, Resource):
                 conditions.append('foodstuff_id in ({})'.format(','.join(str(f) for f in kwargs['foodstuff_ids'])))
 
             condition = ' AND '.join(str(c) for c in conditions)
+            requested_page = ' LIMIT {} OFFSET {}'.format(kwargs['per_page'], kwargs['per_page'] * kwargs['page'])
+
             query = """SELECT DISTINCT dish.id 
                        FROM dish
                        JOIN dish_categories dc ON dc.dish_id = dish.id
                        FULL JOIN ingredient i ON i.dish_id = dish.id
-                       WHERE """ + condition
+                       WHERE """ + condition + requested_page
 
             try:
                 result = db.engine.execute(query)
@@ -55,33 +54,32 @@ class DishList(MethodResource, Resource):
                        }, 503
 
             dish_ids = [row[0] for row in result]
-            dishes = Dish.query.filter(Dish.id.in_(dish_ids)).order_by(Dish.name.desc()).paginate(page, per_page, False)
+            dishes = Dish.query.filter(Dish.id.in_(dish_ids)).order_by(Dish.name.desc()).all()
         else:
-            dishes = Dish.query.order_by(Dish.name.desc()).paginate(page, per_page, False)
+            dishes = Dish.query.order_by(Dish.name.desc()).all()
 
-        current_full_path = request.full_path
-        if page < dishes.pages:
-            next_page = current_full_path.replace('page={}'.format(page), 'page={}'.format(dishes.page + 1))
+        kwargs['page'] += 1
+        next_page = request.path + '?' + '&'.join('{}={}'.format(key, kwargs[key]) for key in kwargs)
+        if kwargs['page'] <= 2:
+            prev_page = None
         else:
-            next_page = None
-        last_page = current_full_path.replace('page={}'.format(page), 'page={}'.format(dishes.pages))
+            kwargs['page'] -= 2
+            prev_page = request.path + '?' + '&'.join('{}={}'.format(key, kwargs[key]) for key in kwargs)
 
         result = {
-            'data': DishesResponseSchema().dump(dishes.items),
+            'data': DishesResponseSchema().dump(dishes),
             'pagination': {
-                'total': dishes.total,
-                'page': dishes.page,
-                'pages': dishes.pages,
+                'page': kwargs['page']
             },
             '_links': {
                 'self': {
-                    'href': current_full_path
+                    'href': request.full_path
+                },
+                'prev': {
+                    'href': prev_page
                 },
                 'next': {
                     'href': next_page
-                },
-                'last': {
-                    'href': last_page
                 }
             }
         }

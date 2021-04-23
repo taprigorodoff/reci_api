@@ -10,6 +10,7 @@ import json
 
 class DishFilterSchema(Schema):
     page = fields.Integer(required=True, validate=validate.Range(min=1))
+    per_page = fields.Integer(required=True, validate=validate.Range(min=1))
     cook_time = fields.Integer(required=False)
     all_time = fields.Integer(required=False)
     category_id = fields.Integer(required=False)
