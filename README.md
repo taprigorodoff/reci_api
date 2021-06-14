@@ -1,13 +1,13 @@
 API для создания рецептов, меню и списка покупок по меню
 
-## Tech Stack
+## Предварительные условия
 * Python 3
 * PostgreSQL
 * Redis
 
 ## Установка проекта
 `git clone https://github.com/taprigorodoff/reci_api` <br>
-`pip install -r requirements.txt` <br> //venv
+`pip install -r requirements.txt` <br> 
 
 ## Инициализация БД
 * создать пустую базу в PostgreSQL
@@ -23,4 +23,4 @@ API для создания рецептов, меню и списка поку�
 Для работы со Swagger перейти по адресу http://127.0.0.1:5000/swagger-ui
 
 ## Документация
-Документация и схема БД в [Wiki](https://github.com/taprigorodoff/reci_api/wiki)<br>
+Схема БД в [Wiki](https://github.com/taprigorodoff/reci_api/wiki)<br>
