@@ -1,27 +1,30 @@
 API для создания рецептов, меню и списка покупок по меню
+## Запуск с помощью Docker-compose
+`docker-compose build` <br>
+`docker-compose up`
 
-## Предварительные условия
+## Установка 
+### Предварительные условия
 * Python 3
 * PostgreSQL
 * Redis
 
-## Установка
 ### Установка проекта
 `git clone https://github.com/taprigorodoff/reci_api` <br>
 `pip install -r requirements.txt` <br> 
 
 ### Инициализация БД
 * создать пустую базу в PostgreSQL
-* в файле конфигурации app/config.py заменить значение переменной SQLALCHEMY_DATABASE_URI на 'postgresql://username:password@host:port/database' <br>
+* в файле settings.ini прописать данные для соединения с БД
 * перейти в /app <br>
 * выполнить скрипт миграции <br>`flask db upgrade` <br>
 
 ### Кэширование
-* в файле конфигурации app/config.py заменить значение переменной CACHE_REDIS_URL на 'redis://host:port/database' или 'redis://username:password@host:port/database'
+* в файле settings.ini прописать данные для соединения с redis
 
-## Запуск
-`python3 main.py` <br><br>
-Для работы со Swagger перейти по адресу http://127.0.0.1:5000/swagger-ui
+### Запуск
+`python3 main.py` <br>
 
 ## Документация
+Для работы со Swagger перейти по адресу http://127.0.0.1:5000/swagger-ui <br>
 Схема БД в [Wiki](https://github.com/taprigorodoff/reci_api/wiki)<br>
