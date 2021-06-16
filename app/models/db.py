@@ -16,7 +16,7 @@ t_ingredient_alternatives = db.Table(
 class Menu(db.Model):
     __tablename__ = 'menu'
 
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
 
     dishes = db.relationship('Dish', secondary='menu_dishes', passive_deletes=True)
@@ -25,7 +25,7 @@ class Menu(db.Model):
 class MenuDish(db.Model):
     __tablename__ = 'menu_dishes'
 
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    id = db.Column(db.Integer, primary_key=True)
     menu_id = db.Column(db.ForeignKey('menu.id'))
     dish_id = db.Column(db.ForeignKey('dish.id'))
     portion = db.Column(db.Integer)
@@ -37,7 +37,7 @@ class MenuDish(db.Model):
 class Dish(db.Model):
     __tablename__ = 'dish'
 
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
     description = db.Column(db.Text)
     portion = db.Column(db.Integer)
@@ -51,7 +51,7 @@ class Dish(db.Model):
 class Ingredient(db.Model):
     __tablename__ = 'ingredient'
 
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    id = db.Column(db.Integer, primary_key=True)
     dish_id = db.Column(db.ForeignKey('dish.id'))
     foodstuff_id = db.Column(db.ForeignKey('foodstuff.id'))
     unit_id = db.Column(db.ForeignKey('d_unit.id'))
@@ -71,7 +71,7 @@ class Ingredient(db.Model):
 class Foodstuff(db.Model):
     __tablename__ = 'foodstuff'
 
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
     store_section_id = db.Column(db.ForeignKey('d_store_section.id'))
 
@@ -82,7 +82,7 @@ class Foodstuff(db.Model):
 class DCategory(db.Model):
     __tablename__ = 'd_category'
 
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
 
     dishes = db.relationship('Dish', secondary='dish_categories', backref='d_category')
@@ -91,26 +91,26 @@ class DCategory(db.Model):
 class DPrePackType(db.Model):
     __tablename__ = 'd_pre_pack_type'
 
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
 
 
 class DStage(db.Model):
     __tablename__ = 'd_stage'
 
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
 
 
 class DStoreSection(db.Model):
     __tablename__ = 'd_store_section'
 
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
 
 
 class DUnit(db.Model):
     __tablename__ = 'd_unit'
 
-    id = db.Column(db.Integer, primary_key=True, server_default=db.FetchedValue())
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text)
