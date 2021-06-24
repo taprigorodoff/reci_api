@@ -37,13 +37,16 @@ class DishList(MethodResource, Resource):
                 conditions.append('foodstuff_id in ({})'.format(','.join(str(f) for f in kwargs['foodstuff_ids'])))
 
             condition = ' AND '.join(str(c) for c in conditions)
+            if condition:
+                condition = ' WHERE ' + condition
+
             requested_page = ' LIMIT {} OFFSET {}'.format(kwargs['per_page'], kwargs['per_page'] * kwargs['page'])
 
             query = """SELECT DISTINCT dish.id 
                        FROM dish
                        JOIN dish_categories dc ON dc.dish_id = dish.id
                        FULL JOIN ingredient i ON i.dish_id = dish.id
-                       WHERE """ + condition + requested_page
+                    """ + condition + requested_page
 
             try:
                 result = db.engine.execute(query)
